@@ -171,8 +171,11 @@ const hash = new URLSearchParams(location.hash.slice(1).replace(/,/g, '&'));
 let deep = hash.has('walk') ? () => setMode('walk', WALK_SPOTS[ROOM_KEYS[hash.get('walk')]] || undefined)
   : hash.has('walkthrough') ? () => setMode('tour') : hash.has('above') ? () => {} : null;
 let intro = matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash.includes('nointro') || deep ? null : new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
-renderer.compile(scene, camera); // prepare every material (with the sweep's clipping) up front so the intro doesn't stutter
-const endIntro = () => { intro?.finish(); intro = null; fixtures.visible = true; show('btn-skip', false); show('btn-sound', true); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) welcome.showModal(); };
+// Prepare every material up front, including the lights and sky the intro reveals later, so nothing compiles mid-intro
+fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
+renderer.compile(scene, camera);
+fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
+const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); show('btn-sound', true); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) welcome.showModal(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 
 // Replay the intro from the welcome card: back to an empty site, then build it again
@@ -196,13 +199,19 @@ $('btn-share').onclick = async () => {
 
 // Frame loop
 const clock = new THREE.Clock();
+let introDt = 1 / 60, frame = 0;
 let shownRoom = '';
 renderer.setAnimationLoop(() => {
   const w = innerWidth, h = innerHeight;
   if (renderer.domElement.width !== Math.floor(w * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   const dt = Math.min(clock.getDelta(), 0.05);
   updateTweens(dt);
-  if (intro && !intro.update(dt)) endIntro();
+  if (intro) {
+    // smooth out uneven frame times so the sweep and camera glide, and redraw shadows every other frame
+    introDt = introDt * 0.8 + dt * 0.2;
+    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = (frame++ % 2) === 0;
+    if (!intro.update(introDt)) endIntro();
+  }
   if (mode === 'orbit') orbit.update();
   if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }
   if (mode === 'tour') tour.update(dt);
