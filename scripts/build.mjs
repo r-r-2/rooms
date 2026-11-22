@@ -19,7 +19,7 @@ const head = (t, desc, img, path) => `<!doctype html>
 <meta property="og:image" content="${SITE}${img}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${path === '/' ? '' : '../'}style.css">
 </head>`;
 const foot = `  <footer><span>Modelled in Three.js from iPhone LiDAR scans.</span><span>Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</span></footer>`;
