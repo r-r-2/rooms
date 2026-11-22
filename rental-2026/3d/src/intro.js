@@ -1,36 +1,33 @@
-// Opening, about 6.5 s, one continuous move:
-// an orange floor plan draws itself, the floors spread out room by room, the walls rise in a wave,
-// the furniture settles in, and the camera spirals down from above into the dollhouse view the whole time.
+// Opening, about 4 s, four beats while the camera spirals down in one move:
+// the orange plan draws itself, each room rises as one piece, each room's furniture lands as one group,
+// then the ceiling lights ripple on and the plan fades.
 import * as THREE from 'three';
 
 const ROOM_ORDER = ['living', 'kitchen', 'bedroom', 'corridor', 'toilet']; // the wave starts at the front door
-const END = 6.6, HOLD = 0.35; // HOLD: a beat before anything moves, so the first (slow) frames aren't seen as stutter
+const END = 3.9, HOLD = 0.25;
+const LIGHT_ORDER = ['living', 'kitchen', 'dressing', 'bedroom', 'corridor', 'toilet', 'shower']; // HOLD: a beat before anything moves, so the first (slow) frames aren't seen as stutter
 
 const clamp01 = (t) => Math.min(1, Math.max(0, t));
 const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // cubic in-out
 const inOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 const outQuart = (t) => 1 - Math.pow(1 - t, 4);
-const outBack = (t, s = 1.4) => 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); // a soft overshoot
 
 export class Intro {
-  constructor(home, camera, centre, endPose) {
-    Object.assign(this, { home, camera, centre, endPose, t: -HOLD, active: true, parts: [] });
+  constructor(home, camera, centre, endPose, lights = {}, fixtures = null) {
+    Object.assign(this, { home, camera, centre, endPose, lights, fixtures, t: -HOLD, active: true, parts: [] });
     home.updateMatrixWorld(true);
     const roomOf = (o) => { while (o.parent && o.parent !== home) o = o.parent; return Math.max(0, ROOM_ORDER.indexOf(o.name)); };
-    const roomCentre = {};
-    home.children.forEach((g) => (roomCentre[g.name] = new THREE.Box3().setFromObject(g).getCenter(new THREE.Vector3())));
-    const v = new THREE.Vector3(), floors = [];
+    const floors = [];
     home.traverse((o) => {
       if (!o.isMesh || o.userData.ceiling) return;
-      const r = roomOf(o), rc = roomCentre[ROOM_ORDER[r]] || centre;
-      o.getWorldPosition(v);
-      const local = Math.hypot(v.x - rc.x, v.z - rc.z); // distance from the middle of its room
+      const r = roomOf(o);
       const base = { o, y0: o.position.y, s0: o.scale.clone() };
-      if (o.userData.floor) { floors.push(o); this.parts.push({ ...base, kind: 'floor', delay: 0.9 + r * 0.22, dur: 0.9 }); }
+      // a whole room moves as one: same timing for its floor and walls, then for all its furniture
+      if (o.userData.floor) { floors.push(o); this.parts.push({ ...base, kind: 'floor', delay: 0.55 + r * 0.2, dur: 0.6 }); }
       else if (o.userData.wall && o.geometry.parameters?.height) {
         const h = o.geometry.parameters.height;
-        this.parts.push({ ...base, kind: 'wall', bottom: o.position.y - h / 2, h, delay: 1.7 + r * 0.28 + local * 0.06, dur: 1.1 });
-      } else this.parts.push({ ...base, kind: 'thing', delay: 3.0 + r * 0.28 + local * 0.08 + Math.random() * 0.15, dur: 0.85 });
+        this.parts.push({ ...base, kind: 'wall', bottom: o.position.y - h / 2, h, delay: 0.6 + r * 0.2, dur: 0.65 });
+      } else this.parts.push({ ...base, kind: 'thing', delay: 1.6 + r * 0.2, dur: 0.45 });
     });
 
     // The plan: every floor outline traced in the stamp orange, drawn on in one stroke
@@ -60,16 +57,20 @@ export class Intro {
       const k = clamp01((t - p.delay) / p.dur), o = p.o;
       if (p.kind === 'floor') { const e = outQuart(k); o.visible = k > 0; o.scale.set(Math.max(e, 0.001), Math.max(e, 0.001), 1); }
       else if (p.kind === 'wall') { const e = Math.max(inOut(k), 0.001); o.scale.y = e; o.position.y = p.bottom + (p.h * e) / 2; }
-      else {
-        o.visible = k > 0;
-        const s = Math.max(outBack(k), 0.001);
-        o.scale.set(p.s0.x * s, p.s0.y * s, p.s0.z * s);
-        o.position.y = p.y0 + (1 - outQuart(k)) * 0.3;
-      }
+      else { o.visible = k > 0; o.position.y = p.y0 + (1 - outQuart(k)) * 0.15; }
     }
-    // the plan draws in over 1.6 s, then fades once the rooms stand on it
-    this.plan.geometry.setDrawRange(0, Math.ceil(inOut(clamp01(t / 1.6)) * this.planCount / 2) * 2);
-    this.plan.material.opacity = 1 - clamp01((t - 4.6) / 1.4);
+    // the plan draws in one quick stroke, then fades as the lights come on
+    this.plan.geometry.setDrawRange(0, Math.ceil(inOut(clamp01(t / 0.8)) * this.planCount / 2) * 2);
+    this.plan.material.opacity = 1 - clamp01((t - 2.8) / 0.8);
+    // finale: the ceiling lights ripple on room by room, a warm swell that settles back to the time of day
+    if (this.fixtures) this.fixtures.visible = t > 2.6;
+    LIGHT_ORDER.forEach((name, i) => {
+      const L = this.lights[name]; if (!L) return;
+      const k = clamp01((t - 2.65 - i * 0.12) / 0.7), g = Math.sin(Math.PI * k) * (k > 0 && k < 1 ? 1 : 0);
+      const base = L.on ? 1 : 0;
+      L.light.intensity = 0.9 * L.discs.length * Math.max(base, g * 1.3);
+      L.discs.forEach((d) => d.material.emissive.setHex(0xffe2b8).multiplyScalar(Math.max(base, g)));
+    });
 
     const c = inOutSine(clamp01(t / (END - 0.3)));
     this.sph.set(
@@ -90,6 +91,8 @@ export class Intro {
       else if (p.kind === 'wall') o.scale.y = 1;
       else o.scale.copy(p.s0);
     }
+    for (const L of Object.values(this.lights)) L.set(L.on); // back to the time of day's lighting
+    if (this.fixtures) this.fixtures.visible = true;
     this.plan.removeFromParent(); this.plan.geometry.dispose(); this.plan.material.dispose();
     this.active = false;
   }
