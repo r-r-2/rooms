@@ -23,6 +23,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
+renderer.localClippingEnabled = true; // the intro's scan sweep
 const scene = new THREE.Scene();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.45;
@@ -169,8 +170,8 @@ const ROOM_KEYS = { living: 'Living room', kitchen: 'Kitchen', bedroom: 'Bedroom
 const hash = new URLSearchParams(location.hash.slice(1).replace(/,/g, '&'));
 let deep = hash.has('walk') ? () => setMode('walk', WALK_SPOTS[ROOM_KEYS[hash.get('walk')]] || undefined)
   : hash.has('walkthrough') ? () => setMode('tour') : hash.has('above') ? () => {} : null;
-renderer.compile(scene, camera); // prepare every material up front so the intro's first second doesn't stutter
 let intro = matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash.includes('nointro') || deep ? null : new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
+renderer.compile(scene, camera); // prepare every material (with the sweep's clipping) up front so the intro doesn't stutter
 const endIntro = () => { intro?.finish(); intro = null; fixtures.visible = true; show('btn-skip', false); show('btn-sound', true); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) welcome.showModal(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 

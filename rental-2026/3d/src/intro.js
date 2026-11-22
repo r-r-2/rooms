@@ -1,49 +1,50 @@
-// Opening, about 4 s, four beats while the camera spirals down in one move:
-// the orange plan draws itself, each room rises as one piece, each room's furniture lands as one group,
-// then the ceiling lights ripple on and the plan fades.
+// Opening, about 4 s: a LiDAR-style scan. An orange light sheet sweeps across the flat from the front door,
+// and everything behind it appears whole, the way the iPhone scan built it up. Then the ceiling lights
+// ripple on. The camera spirals down from above into the dollhouse view in one move the whole time.
 import * as THREE from 'three';
 
-const ROOM_ORDER = ['living', 'kitchen', 'bedroom', 'corridor', 'toilet']; // the wave starts at the front door
-const END = 3.9, HOLD = 0.25;
-const LIGHT_ORDER = ['living', 'kitchen', 'dressing', 'bedroom', 'corridor', 'toilet', 'shower']; // HOLD: a beat before anything moves, so the first (slow) frames aren't seen as stutter
+const END = 3.9, HOLD = 0.25, SWEEP = [0.05, 2.45]; // sweep start and end, seconds
+const LIGHT_ORDER = ['living', 'kitchen', 'dressing', 'bedroom', 'corridor', 'toilet', 'shower'];
+const ORANGE = 0xff6a13;
 
 const clamp01 = (t) => Math.min(1, Math.max(0, t));
-const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // cubic in-out
 const inOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
-const outQuart = (t) => 1 - Math.pow(1 - t, 4);
 
 export class Intro {
   constructor(home, camera, centre, endPose, lights = {}, fixtures = null) {
-    Object.assign(this, { home, camera, centre, endPose, lights, fixtures, t: -HOLD, active: true, parts: [] });
+    Object.assign(this, { home, camera, centre, endPose, lights, fixtures, t: -HOLD, active: true });
     home.updateMatrixWorld(true);
-    const roomOf = (o) => { while (o.parent && o.parent !== home) o = o.parent; return Math.max(0, ROOM_ORDER.indexOf(o.name)); };
-    const floors = [];
-    home.traverse((o) => {
-      if (!o.isMesh || o.userData.ceiling) return;
-      const r = roomOf(o);
-      const base = { o, y0: o.position.y, s0: o.scale.clone() };
-      // a whole room moves as one: same timing for its floor and walls, then for all its furniture
-      if (o.userData.floor) { floors.push(o); this.parts.push({ ...base, kind: 'floor', delay: 0.55 + r * 0.2, dur: 0.6 }); }
-      else if (o.userData.wall && o.geometry.parameters?.height) {
-        const h = o.geometry.parameters.height;
-        this.parts.push({ ...base, kind: 'wall', bottom: o.position.y - h / 2, h, delay: 0.6 + r * 0.2, dur: 0.65 });
-      } else this.parts.push({ ...base, kind: 'thing', delay: 1.6 + r * 0.2, dur: 0.45 });
-    });
 
-    // The plan: every floor outline traced in the stamp orange, drawn on in one stroke
-    const pts = [], b = new THREE.Box3();
-    floors.sort((a, c) => roomOf(a) - roomOf(c)).forEach((f) => {
-      b.setFromObject(f); const y = 0.015, { min: m, max: M } = b;
-      pts.push(m.x, y, m.z, M.x, y, m.z, M.x, y, m.z, M.x, y, M.z, M.x, y, M.z, m.x, y, M.z, m.x, y, M.z, m.x, y, m.z);
-    });
-    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    this.planCount = pts.length / 3;
-    this.plan = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xff6a13, transparent: true, opacity: 1, toneMapped: false, depthWrite: false }));
-    this.plan.renderOrder = 10; home.add(this.plan);
+    // Sweep direction: from the front door (south-east) towards the far corner
+    this.dir = new THREE.Vector3(-0.35, 0, -1).normalize();
+    const box = new THREE.Box3().setFromObject(home), d = [];
+    for (const x of [box.min.x, box.max.x]) for (const z of [box.min.z, box.max.z]) d.push(this.dir.dot(new THREE.Vector3(x, 0, z)));
+    this.range = [Math.min(...d) - 0.1, Math.max(...d) + 0.1];
+    // One clipping plane cuts the whole flat; what the sheet has passed (dir·p <= at) is shown
+    this.plane = new THREE.Plane(this.dir.clone().negate(), this.range[0]);
+    this.mats = new Set();
+    home.traverse((o) => { if (o.isMesh) [].concat(o.material).forEach((m) => this.mats.add(m)); });
+    this.mats.forEach((m) => { m.clippingPlanes = [this.plane]; m.needsUpdate = true; });
+
+    // The light sheet: a tall orange glow across the flat, brightest at the floor, with a bright line on the ground
+    const size = box.getSize(new THREE.Vector3()), span = Math.hypot(size.x, size.z) + 1, h = 2.9;
+    const cv = document.createElement('canvas'); cv.width = 4; cv.height = 128;
+    const g = cv.getContext('2d'), grad = g.createLinearGradient(0, 0, 0, 128);
+    grad.addColorStop(0, 'rgba(255,106,19,0)'); grad.addColorStop(0.6, 'rgba(255,106,19,0.18)'); grad.addColorStop(1, 'rgba(255,106,19,0.85)');
+    g.fillStyle = grad; g.fillRect(0, 0, 4, 128);
+    this.tex = new THREE.CanvasTexture(cv);
+    this.sheet = new THREE.Mesh(new THREE.PlaneGeometry(span, h), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }));
+    this.line = new THREE.Mesh(new THREE.BoxGeometry(span, 0.025, 0.025), new THREE.MeshBasicMaterial({ color: ORANGE, transparent: true, depthWrite: false, toneMapped: false }));
+    this.line.position.y = -h / 2 + 0.015; this.sheet.add(this.line);
+    this.sheet.renderOrder = this.line.renderOrder = 10;
+    this.sheet.position.y = h / 2;
+    this.sheet.lookAt(this.dir.clone().setY(h / 2)); // face along the sweep (sheet sits at the origin here)
+    this.rig = new THREE.Group(); this.rig.add(this.sheet);
+    home.parent.add(this.rig);
+    const c = box.getCenter(new THREE.Vector3()); this.mid = new THREE.Vector3(c.x, 0, c.z);
 
     // Camera: a spiral on a sphere around the flat, from high and turned away to the dollhouse view
-    const off = endPose.clone().sub(centre);
-    this.sph1 = new THREE.Spherical().setFromVector3(off);
+    this.sph1 = new THREE.Spherical().setFromVector3(endPose.clone().sub(centre));
     this.sph0 = new THREE.Spherical(this.sph1.radius * 1.3, 0.14, this.sph1.theta - 1.1);
     this.sph = new THREE.Spherical();
     this.update(0);
@@ -53,30 +54,31 @@ export class Intro {
     if (!this.active) return false;
     this.t += dt;
     const t = this.t;
-    for (const p of this.parts) {
-      const k = clamp01((t - p.delay) / p.dur), o = p.o;
-      if (p.kind === 'floor') { const e = outQuart(k); o.visible = k > 0; o.scale.set(Math.max(e, 0.001), Math.max(e, 0.001), 1); }
-      else if (p.kind === 'wall') { const e = Math.max(inOut(k), 0.001); o.scale.y = e; o.position.y = p.bottom + (p.h * e) / 2; }
-      else { o.visible = k > 0; o.position.y = p.y0 + (1 - outQuart(k)) * 0.15; }
-    }
-    // the plan draws in one quick stroke, then fades as the lights come on
-    this.plan.geometry.setDrawRange(0, Math.ceil(inOut(clamp01(t / 0.8)) * this.planCount / 2) * 2);
-    this.plan.material.opacity = 1 - clamp01((t - 2.8) / 0.8);
+
+    // the sweep: the plane and the sheet move together across the whole flat
+    const k = inOutSine(clamp01((t - SWEEP[0]) / (SWEEP[1] - SWEEP[0])));
+    const at = THREE.MathUtils.lerp(this.range[0], this.range[1], k);
+    this.plane.constant = at;
+    const p = this.mid.clone().addScaledVector(this.dir, at - this.dir.dot(this.mid));
+    this.rig.position.set(p.x, 0, p.z);
+    const fade = clamp01(t / 0.2) * (1 - clamp01((t - SWEEP[1] + 0.1) / 0.4));
+    this.sheet.material.opacity = 0.85 * fade; this.line.material.opacity = fade;
+    this.rig.visible = fade > 0;
+
     // finale: the ceiling lights ripple on room by room, a warm swell that settles back to the time of day
-    if (this.fixtures) this.fixtures.visible = t > 2.6;
+    if (this.fixtures) this.fixtures.visible = t > 2.4;
     LIGHT_ORDER.forEach((name, i) => {
       const L = this.lights[name]; if (!L) return;
-      const k = clamp01((t - 2.65 - i * 0.12) / 0.7), g = Math.sin(Math.PI * k) * (k > 0 && k < 1 ? 1 : 0);
-      const base = L.on ? 1 : 0;
-      L.light.intensity = 0.9 * L.discs.length * Math.max(base, g * 1.3);
-      L.discs.forEach((d) => d.material.emissive.setHex(0xffe2b8).multiplyScalar(Math.max(base, g)));
+      const q = clamp01((t - 2.5 - i * 0.12) / 0.7), glow = q > 0 && q < 1 ? Math.sin(Math.PI * q) : 0, base = L.on ? 1 : 0;
+      L.light.intensity = 0.9 * L.discs.length * Math.max(base, glow * 1.3);
+      L.discs.forEach((dsc) => dsc.material.emissive.setHex(0xffe2b8).multiplyScalar(Math.max(base, glow)));
     });
 
-    const c = inOutSine(clamp01(t / (END - 0.3)));
+    const e = inOutSine(clamp01(t / (END - 0.3)));
     this.sph.set(
-      THREE.MathUtils.lerp(this.sph0.radius, this.sph1.radius, c),
-      THREE.MathUtils.lerp(this.sph0.phi, this.sph1.phi, c),
-      THREE.MathUtils.lerp(this.sph0.theta, this.sph1.theta, c));
+      THREE.MathUtils.lerp(this.sph0.radius, this.sph1.radius, e),
+      THREE.MathUtils.lerp(this.sph0.phi, this.sph1.phi, e),
+      THREE.MathUtils.lerp(this.sph0.theta, this.sph1.theta, e));
     this.camera.position.setFromSpherical(this.sph).add(this.centre);
     this.camera.lookAt(this.centre);
     if (t >= END) this.finish();
@@ -84,16 +86,12 @@ export class Intro {
   }
 
   finish() {
-    for (const p of this.parts) {
-      const o = p.o;
-      o.visible = true; o.position.y = p.y0;
-      if (p.kind === 'floor') o.scale.set(1, 1, 1);
-      else if (p.kind === 'wall') o.scale.y = 1;
-      else o.scale.copy(p.s0);
-    }
+    this.plane.constant = 1e6; // everything shown; the plane stays on the materials so nothing recompiles
     for (const L of Object.values(this.lights)) L.set(L.on); // back to the time of day's lighting
     if (this.fixtures) this.fixtures.visible = true;
-    this.plan.removeFromParent(); this.plan.geometry.dispose(); this.plan.material.dispose();
+    this.rig.removeFromParent();
+    this.sheet.geometry.dispose(); this.sheet.material.dispose(); this.tex.dispose();
+    this.line.geometry.dispose(); this.line.material.dispose();
     this.active = false;
   }
 }
