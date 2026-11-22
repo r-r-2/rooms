@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Short-term rental, 2026 · Rooms I've lived in</title>
+<meta name="description" content="A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
+<link rel="canonical" href="https://rooms.rr2.dev/rental-2026/">
+<meta property="og:title" content="Short-term rental, 2026 · Rooms I've lived in">
+<meta property="og:description" content="A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
+<meta property="og:image" content="https://rooms.rr2.dev/rental-2026/stills/above.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<script>/* old-style room links (/rental-2026/#kitchen) open the 3D in that room */
+const k = location.hash.slice(1); if (["living","kitchen","bedroom","dressing","bathroom"].includes(k)) location.replace('3d/index.html#walk=' + k);</script>
+<main class="page">
+  <a class="crumb" href="../index.html">Rooms I've lived in</a>
+  <h1>Short-term rental, 2026</h1>
+  <p class="lede">A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out. Doors, lights, curtains and the TV all work.</p>
+  <a class="hero" href="3d/index.html#above"><img src="stills/above.jpg" alt="The whole place from above, walls cut away" width="1600" height="1000"></a>
+  <div class="actions">
+    <a class="btn dark" href="3d/index.html#walkthrough">Take the walkthrough</a>
+    <a class="btn" href="3d/index.html#above">Look around from above</a>
+    <button class="btn share" id="share" data-url="https://rooms.rr2.dev/rental-2026/" data-title="Short-term rental, 2026">Share</button>
+  </div>
+  <p class="copied" id="copied" role="status" aria-live="polite"></p>
+  <h2>Rooms</h2>
+  <ul class="rooms">
+    <li><a href="3d/index.html#walk=living"><img src="stills/living.jpg" alt="Living room" width="1200" height="900" loading="lazy"><span>Living room</span></a></li>
+    <li><a href="3d/index.html#walk=kitchen"><img src="stills/kitchen.jpg" alt="Kitchen" width="1200" height="900" loading="lazy"><span>Kitchen</span></a></li>
+    <li><a href="3d/index.html#walk=bedroom"><img src="stills/bedroom.jpg" alt="Bedroom" width="1200" height="900" loading="lazy"><span>Bedroom</span></a></li>
+    <li><a href="3d/index.html#walk=dressing"><img src="stills/dressing.jpg" alt="Dressing" width="1200" height="900" loading="lazy"><span>Dressing</span></a></li>
+    <li><a href="3d/index.html#walk=bathroom"><img src="stills/bathroom.jpg" alt="Bathroom" width="1200" height="900" loading="lazy"><span>Bathroom</span></a></li>
+  </ul>
+  <p class="note">Each room opens at eye level. Drag to look around, walk with the arrow keys or the on-screen pad, and tap things to use them.</p>
+  <footer><span>Modelled in Three.js from iPhone LiDAR scans.</span><span>Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</span></footer>
+</main>
+<script>
+// Share the place: the phone's share sheet where there is one, otherwise copy the link
+const b = document.getElementById('share'), out = document.getElementById('copied');
+b.onclick = async () => {
+  const { url, title } = b.dataset;
+  if (navigator.share) { try { await navigator.share({ title, url }); } catch {} return; }
+  try { await navigator.clipboard.writeText(url); out.textContent = 'Link copied'; } catch { out.textContent = url; }
+  setTimeout(() => (out.textContent = ''), 2500);
+};
+</script>
+</body>
+</html>

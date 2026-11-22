@@ -1,0 +1,12 @@
+[
+  {
+    "slug": "rental-2026",
+    "type": "Short-term rental",
+    "year": 2026,
+    "city": null,
+    "blurb": "A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.",
+    "rooms": [
+      ["living", "Living room"], ["kitchen", "Kitchen"], ["bedroom", "Bedroom"], ["dressing", "Dressing"], ["bathroom", "Bathroom"]
+    ]
+  }
+]
