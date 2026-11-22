@@ -6,7 +6,27 @@
     "city": null,
     "blurb": "A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.",
     "rooms": [
-      ["living", "Living room"], ["kitchen", "Kitchen"], ["bedroom", "Bedroom"], ["dressing", "Dressing"], ["bathroom", "Bathroom"]
-    ]
+      [
+        "living",
+        "Living room"
+      ],
+      [
+        "kitchen",
+        "Kitchen"
+      ],
+      [
+        "bedroom",
+        "Bedroom"
+      ],
+      [
+        "dressing",
+        "Dressing"
+      ],
+      [
+        "bathroom",
+        "Bathroom"
+      ]
+    ],
+    "teaser": "A corner of the bedroom at dusk, curtains half drawn"
   }
 ]

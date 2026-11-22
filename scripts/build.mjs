@@ -1,5 +1,6 @@
 // Writes the front page list and each place page from places.json. Run: node scripts/build.mjs
-// Adding a place: put its viewer in <slug>/3d/ and its stills in <slug>/stills/ (above.jpg + one per room), add an entry, run this.
+// Adding a place: put its viewer in <slug>/3d/ and its stills in <slug>/stills/ (teaser.jpg for the front page, which
+// shouldn't give the layout away, above.jpg for the place page, one per room), add an entry, run this.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const root = new URL('..', import.meta.url).pathname, SITE = 'https://rooms.rr2.dev';
 const places = JSON.parse(readFileSync(root + 'places.json', 'utf8')).sort((a, b) => b.year - a.year);
@@ -24,15 +25,15 @@ const head = (t, desc, img, path) => `<!doctype html>
 const foot = `  <footer><span>Modelled in Three.js from iPhone LiDAR scans.</span><span>Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</span></footer>`;
 
 const intro = "Places I've stayed, rebuilt in 3D from iPhone LiDAR scans I take on the way out. Walk through them, open the doors, switch on the lights.";
-writeFileSync(root + 'index.html', `${head("Rooms I've lived in", intro, `/${places[0].slug}/stills/above.jpg`, '/')}
+writeFileSync(root + 'index.html', `${head("Rooms I've lived in", intro, `/${places[0].slug}/stills/teaser.jpg`, '/')}
 <body>
 <main class="page">
   <h1>Rooms I've lived in</h1>
   <p class="lede">${esc(intro)}</p>
   <ul class="places">
-${places.map((p) => `    <li><a class="place" href="${p.slug}/index.html">
-      <img src="${p.slug}/stills/above.jpg" alt="The ${esc(p.type.toLowerCase())} from above, walls cut away" width="1600" height="1000">
-      <div><h3>${esc(title(p))}</h3>${p.city ? `<p>${esc(p.city)}</p>` : ''}<span class="go">Walk through it</span></div>
+${places.map((p) => `    <li><a class="place" href="${p.slug}/3d/index.html">
+      <img src="${p.slug}/stills/teaser.jpg" alt="${esc(p.teaser)}" width="1600" height="1000">
+      <div><h3>${esc(title(p))}</h3>${p.city ? `<p>${esc(p.city)}</p>` : ''}<span class="go">Step inside</span></div>
     </a></li>`).join('\n')}
   </ul>
 ${foot}
