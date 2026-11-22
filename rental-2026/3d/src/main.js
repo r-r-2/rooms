@@ -8,7 +8,7 @@ import { kitchen, living } from './rooms/kitchen_living.js';
 import { corridor, toilet } from './rooms/baths.js';
 import { downlights, roomLights } from './lights.js';
 import { toggleSound, updateSound } from './sound.js';
-import { setupPointer, updateTweens, tween, items } from './interact.js';
+import { setupPointer, updateTweens, tween, items, events } from './interact.js';
 import { makeDaylight } from './daylight.js';
 import { Tour, ROOMS } from './tour.js';
 import { Intro } from './intro.js';
@@ -102,11 +102,12 @@ const onTourProgress = (f, r) => {
   $('tour-room').innerHTML = `${ROOMS[r][0]} <small>${r + 1} of ${ROOMS.length}</small>`;
   $('btn-nextroom').textContent = r === ROOMS.length - 1 ? 'Finish' : 'Next room';
 };
-const tour = new Tour(camera, nearDoors, onTourProgress, () => setMode('orbit'));
+const tour = new Tour(camera, nearDoors, onTourProgress, () => { track('walkthrough_complete'); setMode('orbit'); });
 $('btn-nextroom').onclick = () => { setPaused(false); tour.nextRoom(); };
 const show = (id, on) => ($(id).hidden = !on);
 function setMode(m, pose) {
   const prev = mode; mode = m;
+  if (m !== prev && m !== 'intro' && prev !== 'intro' && prev !== 'none') track('choose_view', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[m] });
   if (prev === 'tour' && m !== 'tour') tour.stop();
   ['btn-orbit', 'btn-walk', 'btn-day'].forEach((id) => $(id).setAttribute('aria-pressed', String({ orbit: 'btn-orbit', walk: 'btn-walk', tour: 'btn-day' }[m] === id)));
   show('bottom', m === 'orbit' || m === 'walk'); show('modes', m === 'orbit'); show('title', m === 'orbit'); show('btn-more', m !== 'intro');
@@ -141,6 +142,7 @@ $('rooms').innerHTML = ROOMS.map(([name]) => `<button>${name}</button>`).join(''
 [...$('rooms').children].forEach((b, k) => (b.onclick = () => {
   roomsheet.close();
   const name = b.textContent;
+  track('room_open', { room: name, view: mode });
   if (mode === 'tour') { setPaused(false); tour.jump(ROOMS[k][1]); return; }
   if (mode === 'walk') { walk.enable(WALK_SPOTS[name]); return; }
   const [x, z, d] = ROOM_SHOTS[name];
@@ -161,7 +163,7 @@ $('btn-day').onclick = () => setMode('tour');
 $('btn-close').onclick = () => setMode('orbit');
 $('btn-pause').onclick = togglePause;
 let soundOn = false;
-const setSound = (on) => { if (on !== soundOn) soundOn = toggleSound(); $('w-sound').setAttribute('aria-pressed', String(soundOn)); $('m-sound').setAttribute('aria-checked', String(soundOn)); };
+const setSound = (on) => { if (on !== soundOn) { soundOn = toggleSound(); track('room_sound', { on: soundOn }); } $('w-sound').setAttribute('aria-pressed', String(soundOn)); $('m-sound').setAttribute('aria-checked', String(soundOn)); };
 $('w-sound').onclick = () => setSound(!soundOn);
 $('m-sound').onclick = () => setSound(!soundOn);
 $('btn-use').onclick = () => aimed?.tap();
@@ -177,7 +179,7 @@ const showWelcome = () => {
   camera.setViewOffset(innerWidth, innerHeight, 0, Math.min(h * 0.5, innerHeight * 0.3), innerWidth, innerHeight);
 };
 welcome.addEventListener('close', () => camera.clearViewOffset());
-welcome.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => { welcome.close(); if (b.dataset.go !== mode) setMode(b.dataset.go); }));
+welcome.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => { welcome.close(); track('welcome_choice', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[b.dataset.go] }); if (b.dataset.go !== mode) setMode(b.dataset.go); }));
 
 // Menu: light, sound, replay, share, help
 const menu = $('menu');
@@ -210,10 +212,11 @@ function replayIntro() {
   intro = new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
   show('btn-skip', true); $('btn-skip').onclick = endIntro;
 }
-$('m-replay').onclick = replayIntro;
+$('m-replay').onclick = () => { track('replay_intro'); replayIntro(); };
 // Share the whole place (not a room): share sheet on phones, otherwise copy the link
 $('m-share').onclick = async () => {
   const url = 'https://rooms.rr2.dev/rental-2026/', b = $('m-share');
+  track('share', { place: 'rental-2026', from: 'viewer' });
   if (navigator.share) { try { await navigator.share({ title: document.title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); b.textContent = 'Link copied'; } catch { b.textContent = url; }
   setTimeout(() => (b.textContent = 'Share this place'), 2500);
@@ -227,6 +230,9 @@ const calm = () => {
   const busy = mode === 'intro' || document.querySelector('dialog[open]') || walk.keys.size;
   document.body.classList.toggle('idle', !busy && performance.now() - lastInput > 3000);
 };
+
+// Tapping things in the flat (doors, lights, curtains, TV...)
+events.addEventListener('sound', (e) => track('use_object', { kind: e.detail.kind, view: mode }));
 
 // Frame loop
 const clock = new THREE.Clock();

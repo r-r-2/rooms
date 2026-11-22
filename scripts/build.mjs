@@ -21,6 +21,7 @@ const head = (t, desc, img, path) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${path === '/' ? '' : '../'}style.css">
+<script src="${path === '/' ? '' : '../'}analytics.js"></script>
 </head>`;
 const foot = `  <footer><span>Modelled in Three.js from iPhone LiDAR scans.</span><span>Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</span></footer>`;
 
@@ -71,6 +72,7 @@ ${foot}
 const b = document.getElementById('share'), out = document.getElementById('copied');
 b.onclick = async () => {
   const { url, title } = b.dataset;
+  track('share', { place: '${p.slug}', from: 'place_page' });
   if (navigator.share) { try { await navigator.share({ title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); out.textContent = 'Link copied'; } catch { out.textContent = url; }
   setTimeout(() => (out.textContent = ''), 2500);

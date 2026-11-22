@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../style.css">
+<script src="../analytics.js"></script>
 </head>
 <body>
 <script>/* old-style room links (/rental-2026/#kitchen) open the 3D in that room */
@@ -44,6 +45,7 @@ const k = location.hash.slice(1); if (["living","kitchen","bedroom","dressing","
 const b = document.getElementById('share'), out = document.getElementById('copied');
 b.onclick = async () => {
   const { url, title } = b.dataset;
+  track('share', { place: 'rental-2026', from: 'place_page' });
   if (navigator.share) { try { await navigator.share({ title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); out.textContent = 'Link copied'; } catch { out.textContent = url; }
   setTimeout(() => (out.textContent = ''), 2500);
