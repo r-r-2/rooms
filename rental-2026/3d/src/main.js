@@ -169,6 +169,7 @@ const ROOM_KEYS = { living: 'Living room', kitchen: 'Kitchen', bedroom: 'Bedroom
 const hash = new URLSearchParams(location.hash.slice(1).replace(/,/g, '&'));
 let deep = hash.has('walk') ? () => setMode('walk', WALK_SPOTS[ROOM_KEYS[hash.get('walk')]] || undefined)
   : hash.has('walkthrough') ? () => setMode('tour') : hash.has('above') ? () => {} : null;
+renderer.compile(scene, camera); // prepare every material up front so the intro's first second doesn't stutter
 let intro = matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash.includes('nointro') || deep ? null : new Intro(home, camera, centre, dollhousePose);
 const endIntro = () => { intro?.finish(); intro = null; fixtures.visible = true; show('btn-skip', false); show('btn-sound', true); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) welcome.showModal(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
@@ -212,4 +213,4 @@ renderer.setAnimationLoop(() => {
   cutaway(mode === 'orbit' || mode === 'intro');
   renderer.render(scene, camera);
 });
-window.__app = { setMode, camera, items, tour, applyTime };
+window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; } };

@@ -92,3 +92,8 @@ a.title:hover { text-decoration: underline; text-underline-offset: 3px; }
 a.replay { display: inline-flex; align-items: center; }
 .credit { margin: 6px 0 0; font: 400 13px/1.4 var(--ui); color: var(--muted); }
 .credit a { color: inherit; }
+
+/* Controls ease in instead of popping, e.g. when the intro ends */
+@keyframes ui-in { from { opacity: 0; transform: translateY(6px); } }
+.top-left > *, .top-right > *, .bottom > *, .tourbar { animation: ui-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .top-left > *, .top-right > *, .bottom > *, .tourbar { animation: none; } }
