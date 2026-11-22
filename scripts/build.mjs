@@ -32,7 +32,7 @@ writeFileSync(root + 'index.html', `${head("Rooms I've lived in", intro, `/${pla
   <ul class="places">
 ${places.map((p) => `    <li><a class="place" href="${p.slug}/index.html">
       <img src="${p.slug}/stills/above.jpg" alt="The ${esc(p.type.toLowerCase())} from above, walls cut away" width="1600" height="1000">
-      <div><h3>${esc(title(p))}</h3><p>${p.city ? esc(p.city) + ' · ' : ''}${p.rooms.length} rooms</p><span class="go">Walk through it</span></div>
+      <div><h3>${esc(title(p))}</h3>${p.city ? `<p>${esc(p.city)}</p>` : ''}<span class="go">Walk through it</span></div>
     </a></li>`).join('\n')}
   </ul>
 ${foot}
