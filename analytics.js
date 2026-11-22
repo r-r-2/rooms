@@ -1,9 +1,9 @@
 // Google Analytics 4, anonymous only: consent stays "denied", so no cookies are stored and Google gets
 // cookieless pings (rough counts, no returning-visitor data). Only runs on the live site.
 (function () {
-  const GA_ID = 'G-XXXXXXXXXX'; // set to the property's measurement ID
+  const GA_ID = 'G-5WBF3XZCB1';
   window.track = function () {}; // no-op until GA is on
-  if (GA_ID === 'G-XXXXXXXXXX' || location.hostname !== 'rooms.rr2.dev') return;
+  if (location.hostname !== 'rooms.rr2.dev') return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function () { window.dataLayer.push(arguments); };
   gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
