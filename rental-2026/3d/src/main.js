@@ -85,9 +85,10 @@ function applyTime(i) {
   timeIdx = i;
   const [h, label] = TIMES[i], { night } = setHour(h);
   for (const [name, l] of Object.entries(roomLights)) l.set(night || (h > 18 && ['living', 'kitchen'].includes(name)));
-  $('sun-label').textContent = label;
-  $('btn-sun').setAttribute('aria-label', `Change the time of day. Now: ${label.toLowerCase()}`);
+  $('times').querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
 }
+$('times').innerHTML = TIMES.map(([, label]) => `<button aria-pressed="false">${label}</button>`).join('');
+$('times').querySelectorAll('button').forEach((b, k) => (b.onclick = () => applyTime(k)));
 applyTime(0);
 
 // Modes
@@ -96,22 +97,22 @@ let mode = 'intro';
 const nearDoors = (x, z) => { for (const c of colliders) { const b = c.box; if (c.obj.userData.autoOpen && x > b.min.x - 0.9 && x < b.max.x + 0.9 && z > b.min.z - 0.9 && z < b.max.z + 0.9) c.obj.userData.autoOpen(); } };
 let tourRoom = -1;
 const onTourProgress = (f, r) => {
+  $('progress').style.transform = `scaleX(${f})`;
   if (r === tourRoom) return; tourRoom = r;
-  [...$('tour-rooms').querySelectorAll('button')].forEach((b, k) => { b.setAttribute('aria-current', String(k === r)); b.classList.toggle('done', k < r); if (k === r) b.scrollIntoView({ inline: 'nearest', block: 'nearest' }); });
+  $('tour-room').innerHTML = `${ROOMS[r][0]} <small>${r + 1} of ${ROOMS.length}</small>`;
   $('btn-nextroom').textContent = r === ROOMS.length - 1 ? 'Finish' : 'Next room';
 };
 const tour = new Tour(camera, nearDoors, onTourProgress, () => setMode('orbit'));
-$('tour-rooms').innerHTML = ROOMS.map(([name]) => `<li><button>${name}</button></li>`).join('');
-$('tour-rooms').querySelectorAll('button').forEach((b, k) => (b.onclick = () => { setPaused(false); tour.jump(ROOMS[k][1]); }));
 $('btn-nextroom').onclick = () => { setPaused(false); tour.nextRoom(); };
 const show = (id, on) => ($(id).hidden = !on);
 function setMode(m, pose) {
   const prev = mode; mode = m;
   if (prev === 'tour' && m !== 'tour') tour.stop();
   ['btn-orbit', 'btn-walk', 'btn-day'].forEach((id) => $(id).setAttribute('aria-pressed', String({ orbit: 'btn-orbit', walk: 'btn-walk', tour: 'btn-day' }[m] === id)));
-  show('bottom', m === 'orbit' || m === 'walk'); show('modes', m === 'orbit'); show('title', m === 'orbit'); show('btn-sun', m !== 'intro');
-  show('btn-back', m === 'walk'); show('roompill', m === 'walk' || m === 'tour'); show('pad', m === 'walk' && touch); show('aim', m === 'walk');
-  show('btn-help', m !== 'intro'); document.body.classList.toggle('walking', m === 'walk');
+  show('bottom', m === 'orbit' || m === 'walk'); show('modes', m === 'orbit'); show('title', m === 'orbit'); show('btn-more', m !== 'intro');
+  show('btn-close', m === 'walk' || m === 'tour'); show('roompill', m === 'walk'); show('pad', m === 'walk' && touch); show('aim', m === 'walk');
+  $('btn-close').setAttribute('aria-label', m === 'tour' ? 'Stop the walkthrough' : 'Back to the view from above');
+  document.body.classList.toggle('walking', m === 'walk'); wake();
   if (m !== 'walk') { aimed = null; show('btn-use', false); }
   show('tourbar', m === 'tour'); setPaused(false);
   ceilings.forEach((o) => (o.visible = m !== 'orbit'));
@@ -133,37 +134,58 @@ function setMode(m, pose) {
 function setPaused(p) { tour.paused = p; $('btn-pause').setAttribute('aria-pressed', String(p)); $('btn-pause').setAttribute('aria-label', p ? 'Carry on walking' : 'Pause'); }
 const togglePause = () => setPaused(!tour.paused);
 
-// Room buttons fly the dollhouse camera to a framed view of each room
-$('rooms').innerHTML = Object.keys(ROOM_SHOTS).map((r) => `<button>${r}</button>`).join('');
-// In walk mode the same buttons take you to a standing spot in that room
+// Rooms sheet: from above it flies the camera to the room, in walk mode it puts you there, in the walkthrough it skips there
 const WALK_SPOTS = { Bedroom: { x: -0.3, z: -0.9, yaw: 0.35 }, Dressing: { x: 0.55, z: -0.35, yaw: Math.PI }, Kitchen: { x: 2.3, z: -1.6, yaw: 0 }, 'Living room': { x: 1.6, z: 2.9, yaw: -0.5 }, Bathroom: { x: -1.3, z: 1.2, yaw: Math.PI } };
-[...$('rooms').children].forEach((b) => (b.onclick = () => {
-  if (mode === 'walk') { walk.enable(WALK_SPOTS[b.textContent]); return; }
-  const [x, z, d] = ROOM_SHOTS[b.textContent];
+const roomsheet = $('roomsheet');
+$('rooms').innerHTML = ROOMS.map(([name]) => `<button>${name}</button>`).join('');
+[...$('rooms').children].forEach((b, k) => (b.onclick = () => {
+  roomsheet.close();
+  const name = b.textContent;
+  if (mode === 'tour') { setPaused(false); tour.jump(ROOMS[k][1]); return; }
+  if (mode === 'walk') { walk.enable(WALK_SPOTS[name]); return; }
+  const [x, z, d] = ROOM_SHOTS[name];
   tween(orbit.target, 'x', x, 1.1); tween(orbit.target, 'z', z, 1.1);
   tween(camera.position, 'x', x + d * 0.45, 1.1); tween(camera.position, 'y', d * 0.95, 1.1); tween(camera.position, 'z', z + d * 0.6, 1.1);
 }));
+const openRooms = () => {
+  const here = mode === 'tour' ? ROOMS[tourRoom]?.[0] : mode === 'walk' ? shownRoom : '';
+  [...$('rooms').children].forEach((b) => b.setAttribute('aria-current', String(b.textContent === here)));
+  roomsheet.showModal();
+};
+$('btn-rooms').onclick = openRooms;
+$('tour-room').onclick = openRooms;
 
 $('btn-orbit').onclick = () => setMode('orbit');
 $('btn-walk').onclick = () => setMode('walk');
 $('btn-day').onclick = () => setMode('tour');
-$('btn-back').onclick = () => setMode('orbit');
-$('btn-stop').onclick = () => setMode('orbit');
+$('btn-close').onclick = () => setMode('orbit');
 $('btn-pause').onclick = togglePause;
-$('btn-sun').onclick = () => applyTime((timeIdx + 1) % TIMES.length);
 let soundOn = false;
-const setSound = (on) => { if (on !== soundOn) soundOn = toggleSound(); $('btn-sound').setAttribute('aria-pressed', String(soundOn)); $('w-sound').checked = soundOn; };
-$('btn-sound').onclick = () => setSound(!soundOn);
+const setSound = (on) => { if (on !== soundOn) soundOn = toggleSound(); $('w-sound').setAttribute('aria-pressed', String(soundOn)); $('m-sound').setAttribute('aria-checked', String(soundOn)); };
+$('w-sound').onclick = () => setSound(!soundOn);
+$('m-sound').onclick = () => setSound(!soundOn);
 $('btn-use').onclick = () => aimed?.tap();
 
-// Welcome card: what this is, and three plain choices. The ? button brings it back.
+// Sheets close when you tap outside them
+for (const d of document.querySelectorAll('dialog.sheet')) d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+
+// Welcome sheet: what this is and three choices. The model is nudged up so the sheet doesn't cover it.
 const welcome = $('welcome');
-$('w-sound').onchange = (e) => setSound(e.target.checked);
+const showWelcome = () => {
+  welcome.showModal();
+  const h = welcome.getBoundingClientRect().height;
+  camera.setViewOffset(innerWidth, innerHeight, 0, Math.min(h * 0.5, innerHeight * 0.3), innerWidth, innerHeight);
+};
+welcome.addEventListener('close', () => camera.clearViewOffset());
 welcome.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => { welcome.close(); if (b.dataset.go !== mode) setMode(b.dataset.go); }));
-$('btn-help').onclick = () => welcome.showModal();
+
+// Menu: light, sound, replay, share, help
+const menu = $('menu');
+$('btn-more').onclick = () => menu.showModal();
+$('m-help').onclick = () => { menu.close(); if (mode !== 'orbit') setMode('orbit'); showWelcome(); };
 
 // Intro: walls rise and furniture settles in; skippable
-['bottom', 'title', 'btn-sun', 'btn-sound'].forEach((id) => show(id, false));
+['bottom', 'title', 'btn-more'].forEach((id) => show(id, false));
 fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
 // Deep links from the place page: #walk=kitchen (stand in a room), #walkthrough, #above. These skip the intro and the card.
 const ROOM_KEYS = { living: 'Living room', kitchen: 'Kitchen', bedroom: 'Bedroom', dressing: 'Dressing', bathroom: 'Bathroom' };
@@ -175,26 +197,35 @@ let intro = matchMedia('(prefers-reduced-motion: reduce)').matches || location.h
 fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
 renderer.compile(scene, camera);
 fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
-const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); show('btn-sound', true); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) welcome.showModal(); };
+const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) showWelcome(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 
 // Replay the intro from the welcome card: back to an empty site, then build it again
 function replayIntro() {
-  welcome.close();
+  menu.close(); welcome.close();
   if (mode !== 'orbit') setMode('orbit');
   mode = 'intro'; orbit.enabled = false;
-  ['bottom', 'title', 'btn-sun', 'btn-sound', 'btn-help'].forEach((id) => show(id, false));
+  ['bottom', 'title', 'btn-more'].forEach((id) => show(id, false));
   fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
   intro = new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
   show('btn-skip', true); $('btn-skip').onclick = endIntro;
 }
-$('btn-replay').onclick = replayIntro;
+$('m-replay').onclick = replayIntro;
 // Share the whole place (not a room): share sheet on phones, otherwise copy the link
-$('btn-share').onclick = async () => {
-  const url = 'https://rooms.rr2.dev/rental-2026/', b = $('btn-share');
+$('m-share').onclick = async () => {
+  const url = 'https://rooms.rr2.dev/rental-2026/', b = $('m-share');
   if (navigator.share) { try { await navigator.share({ title: document.title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); b.textContent = 'Link copied'; } catch { b.textContent = url; }
   setTimeout(() => (b.textContent = 'Share this place'), 2500);
+};
+
+// Calm: after 3 s untouched the controls fade; any touch, click, key or mouse move brings them back
+var lastInput = performance.now(); // var: setMode can call wake() before this line runs
+function wake() { lastInput = performance.now(); document.body.classList.remove('idle'); }
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, wake, { passive: true });
+const calm = () => {
+  const busy = mode === 'intro' || document.querySelector('dialog[open]') || walk.keys.size;
+  document.body.classList.toggle('idle', !busy && performance.now() - lastInput > 3000);
 };
 
 // Frame loop
@@ -221,6 +252,7 @@ renderer.setAnimationLoop(() => {
   }
   updateSound(camera.position, mode === 'walk' || mode === 'tour');
   cutaway(mode === 'orbit' || mode === 'intro');
+  calm();
   renderer.render(scene, camera);
 });
 window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; } };

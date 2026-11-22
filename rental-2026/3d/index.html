@@ -6,7 +6,7 @@
 <title>Short-term rental, 2026 · Rooms I've lived in</title>
 <meta name="description" content="A short-term rental from 2026, rebuilt in 3D from an iPhone LiDAR scan. Walk through it room by room.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="src/style.css">
 <script type="importmap">
 { "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }
@@ -17,30 +17,18 @@
   <canvas id="c" aria-label="3D model of the apartment"></canvas>
 
   <div class="top">
-    <div class="top-left">
-      <a id="title" class="card title" href="../index.html">Short-term rental, 2026</a>
-      <button id="btn-back" class="pill" hidden>
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
-        Exit walk
-      </button>
-    </div>
-    <span id="roompill" class="pill title-sm" hidden></span>
-    <div class="top-right">
-      <button id="btn-sun" class="pill" aria-label="Change the time of day. Now: morning">
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 16h16"/><path d="M7 16a5 5 0 0 1 10 0"/><path d="M12 6v2"/><path d="M5.6 9.6l1.4 1.4"/><path d="M18.4 9.6 17 11"/></svg>
-        <span id="sun-label">Morning</span>
-      </button>
-      <button id="btn-sound" class="round" aria-label="Room sound" aria-pressed="false">
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="waves" d="M16.5 9.5a3.5 3.5 0 0 1 0 5M19 7a7 7 0 0 1 0 10"/><path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>
-      </button>
-      <button id="btn-help" class="round" aria-label="About and how to use" hidden>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9.2 9a3 3 0 1 1 4.3 2.7c-.9.5-1.5 1.2-1.5 2.3"/><path d="M12 18h.01"/></svg>
-      </button>
-    </div>
+    <a id="title" class="place-name" href="../index.html">Short-term rental, 2026</a>
+    <button id="btn-close" class="round" aria-label="Back to the view from above" hidden>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <span id="roompill" class="where" hidden></span>
+    <button id="btn-more" class="round" aria-label="Menu" aria-haspopup="dialog" hidden>
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+    </button>
   </div>
 
-  <div id="bottom" class="bottom">
-    <div id="rooms" class="chips"></div>
+  <div id="bottom" class="bottom" hidden>
+    <button id="btn-rooms" class="pill" aria-haspopup="dialog">Rooms</button>
     <nav id="modes" class="seg" aria-label="View">
       <button id="btn-orbit" aria-pressed="true">From above</button>
       <button id="btn-day" aria-pressed="false">Walkthrough</button>
@@ -48,31 +36,41 @@
     </nav>
   </div>
 
-  <section id="tourbar" class="card tourbar" aria-label="Walkthrough" hidden>
-    <ol id="tour-rooms" class="tour-rooms" aria-label="Rooms, tap one to skip there"></ol>
-    <div class="tour-row">
-      <button id="btn-pause" class="round outline" aria-label="Pause" aria-pressed="false">
-        <svg class="i-pause" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg>
-        <svg class="i-play" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z"/></svg>
-      </button>
-      <button id="btn-stop" class="pill">Stop walking</button>
-      <button id="btn-nextroom" class="pill dark">Next room</button>
-    </div>
+  <section id="tourbar" class="tourbar" aria-label="Walkthrough" hidden>
+    <button id="btn-pause" class="round outline" aria-label="Pause" aria-pressed="false">
+      <svg class="i-pause" aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg>
+      <svg class="i-play" aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z"/></svg>
+    </button>
+    <button id="tour-room" class="tour-room" aria-haspopup="dialog" aria-label="Jump to a room">Living room <small>1 of 5</small></button>
+    <button id="btn-nextroom" class="pill dark">Next room</button>
+    <span id="progress" class="progress"></span>
   </section>
 
-  <dialog id="welcome" class="card welcome" aria-labelledby="w-title">
+  <dialog id="welcome" class="sheet welcome" aria-labelledby="w-title">
+    <button id="w-sound" class="round sound" aria-label="Room sound" aria-pressed="false">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="waves" d="M16.5 9.5a3.5 3.5 0 0 1 0 5M19 7a7 7 0 0 1 0 10"/><path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>
+    </button>
     <h2 id="w-title">Short-term rental, 2026</h2>
-    <p>A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.</p>
-    <p class="muted">Bedroom, dressing area, bathroom, kitchen and living room, at the scale they really were.</p>
-    <div class="choices">
-      <button data-go="orbit" class="choice primary"><b>Look from above</b><span>Turn the model and pick a room</span></button>
-      <button data-go="tour" class="choice"><b>Take the walkthrough</b><span>About a minute, through every room</span></button>
-      <button data-go="walk" class="choice"><b>Walk around</b><span>Explore at eye level, room by room</span></button>
-    </div>
-    <p class="tip">Things work here. Tap a door, a light, the curtains, the blinds, the TV or the fridge.</p>
-    <label class="sound-opt"><input id="w-sound" type="checkbox"> Play room sound (fridge hum, traffic, the AC)</label>
-    <div class="card-links"><button id="btn-replay" class="replay">Replay the intro</button><button id="btn-share" class="replay">Share this place</button><a class="replay" href="../../index.html">All rooms I've lived in</a></div>
+    <p>Rebuilt in 3D from an iPhone scan I took before moving out.</p>
+    <button data-go="orbit" class="big dark">Look from above</button>
+    <div class="pair"><button data-go="tour" class="big">Walkthrough</button><button data-go="walk" class="big">Walk</button></div>
+    <p class="tip">Tap doors, lights and curtains. They work.</p>
+  </dialog>
+
+  <dialog id="menu" class="sheet menu" aria-label="Menu">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="row"><span>Light</span><div id="times" class="times" role="group" aria-label="Time of day"></div></div>
+    <div class="row"><span>Room sound</span><button id="m-sound" class="switch" role="switch" aria-checked="false" aria-label="Room sound"></button></div>
+    <button id="m-replay" class="row link">Replay the intro</button>
+    <button id="m-share" class="row link">Share this place</button>
+    <button id="m-help" class="row link">How to use</button>
+    <a class="row link" href="../../index.html">All rooms I've lived in</a>
     <p class="credit">Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</p>
+  </dialog>
+
+  <dialog id="roomsheet" class="sheet" aria-label="Rooms">
+    <div class="grab" aria-hidden="true"></div>
+    <div id="rooms" class="roomgrid"></div>
   </dialog>
 
   <div id="aim" class="aim" hidden><i></i></div>
