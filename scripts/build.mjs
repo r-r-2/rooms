@@ -54,8 +54,8 @@ const k = location.hash.slice(1); if (${JSON.stringify(p.rooms.map((r) => r[0]))
   <p class="lede">${esc(p.blurb)} Doors, lights, curtains and the TV all work.</p>
   <a class="hero" href="3d/index.html#above"><img src="stills/above.jpg" alt="The whole place from above, walls cut away" width="1600" height="1000"></a>
   <div class="actions">
-    <a class="btn dark" href="3d/index.html#walkthrough">Take the walkthrough</a>
-    <a class="btn" href="3d/index.html#above">Look around from above</a>
+    <a class="btn dark" href="3d/index.html#above">Look around from above</a>
+    <a class="btn" href="3d/index.html#walkthrough">Take the walkthrough</a>
     <button class="btn share" id="share" data-url="${SITE}/${p.slug}/" data-title="${esc(title(p))}">Share</button>
   </div>
   <p class="copied" id="copied" role="status" aria-live="polite"></p>
