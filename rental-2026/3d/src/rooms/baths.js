@@ -37,6 +37,10 @@ export function corridor() {
       } });
   }
 
+  // Wall closing off the wardrobe's end from the wash area, charcoal tiles on the basin side (from the scan)
+  box(g, [W, 0, 2.4], [-1.6, H, 2.46], mat.wall, { collide: true });
+  box(g, [W, 0, 2.46], [-1.6, H, 2.468], mat.tile(0.53, H, '#34312f'));
+
   // Sliding frosted glass door between the corridor and the wash basin area
   const washGlass = new THREE.MeshStandardMaterial({ color: 0xf2f4f4, roughness: 0.9, transparent: true, opacity: 0.9, depthWrite: false }); // 90% opaque, same as the toilet door
   slidingGlass(g, { axis: 'x', at: 2.42, from: -1.6, to: -0.55, height: 2.3, glass: washGlass });
