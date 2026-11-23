@@ -12,7 +12,7 @@ places.json           the list of places
 style.css             shared styles for the front and place pages
 scripts/build.mjs     writes index.html and each <slug>/index.html from places.json
 <slug>/index.html     place page (generated)
-<slug>/stills/        teaser.jpg (front page, no layout), above.jpg, one still per room
+<slug>/stills/        teaser.jpg (front page, no layout), og.jpg (1200x630 link preview), above.jpg, one still per room
 <slug>/3d/            the interactive 3D model
 vendor/three/         Three.js r187 (just the files the viewers use)
 ```

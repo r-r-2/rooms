@@ -1,5 +1,6 @@
 // Writes the front page list and each place page from places.json. Run: node scripts/build.mjs
-// Adding a place: put its viewer in <slug>/3d/ and its stills in <slug>/stills/ (teaser.jpg for the front page, which
+// Adding a place: put its viewer in <slug>/3d/ and its stills in <slug>/stills/ (teaser.jpg for the front page and og.jpg,
+// a 1200x630 crop of it for link previews, neither of which
 // shouldn't give the layout away, above.jpg for the place page, one per room), add an entry, run this.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const root = new URL('..', import.meta.url).pathname, SITE = 'https://rooms.rr2.dev';
@@ -14,10 +15,20 @@ const head = (t, desc, img, path) => `<!doctype html>
 <title>${esc(t)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${SITE}${path}">
+<!-- link previews: 1200x630 card image (an eye-level still, so the layout stays a surprise) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rooms I've lived in">
+<meta property="og:url" content="${SITE}${path}">
 <meta property="og:title" content="${esc(t)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${SITE}${img}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A living room seen through to a kitchen, rebuilt in 3D">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(t)}">
+<meta name="twitter:description" content="${esc(desc)}">
+<meta name="twitter:image" content="${SITE}${img}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${path === '/' ? '' : '../'}style.css">
@@ -26,7 +37,7 @@ const head = (t, desc, img, path) => `<!doctype html>
 const foot = `  <footer><span>Modelled in Three.js from iPhone LiDAR scans.</span><span>Developed by Rahul (<a href="https://rr2.dev">rr2.dev</a>)</span></footer>`;
 
 const intro = "Places I've stayed, rebuilt in 3D from iPhone LiDAR scans I take on the way out. Walk through them, open the doors, switch on the lights.";
-writeFileSync(root + 'index.html', `${head("Rooms I've lived in", intro, `/${places[0].slug}/stills/teaser.jpg`, '/')}
+writeFileSync(root + 'index.html', `${head("Rooms I've lived in", intro, `/${places[0].slug}/stills/og.jpg`, '/')}
 <body>
 <main class="page">
   <h1>Rooms I've lived in</h1>
@@ -45,7 +56,7 @@ ${foot}
 
 for (const p of places) {
   mkdirSync(root + p.slug, { recursive: true });
-  writeFileSync(root + p.slug + '/index.html', `${head(`${title(p)} · Rooms I've lived in`, p.blurb, `/${p.slug}/stills/above.jpg`, `/${p.slug}/`)}
+  writeFileSync(root + p.slug + '/index.html', `${head(`${title(p)} · Rooms I've lived in`, p.blurb, `/${p.slug}/stills/og.jpg`, `/${p.slug}/`)}
 <body>
 <script>/* old-style room links (/${p.slug}/#kitchen) open the 3D in that room */
 const k = location.hash.slice(1); if (${JSON.stringify(p.rooms.map((r) => r[0]))}.includes(k)) location.replace('3d/index.html#walk=' + k);</script>
