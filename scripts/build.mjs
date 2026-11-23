@@ -25,6 +25,11 @@ const head = (t, desc, img, path) => `<!doctype html>
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A living room seen through to a kitchen, rebuilt in 3D">
+<meta property="og:video" content="https://rooms.rr2.dev/${places[0].slug}/media/launch.mp4">
+<meta property="og:video:secure_url" content="https://rooms.rr2.dev/${places[0].slug}/media/launch.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1280">
+<meta property="og:video:height" content="720">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(t)}">
 <meta name="twitter:description" content="${esc(desc)}">
