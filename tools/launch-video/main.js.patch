@@ -1,0 +1,17 @@
+--- ../../rooms/rental-2026/3d/src/main.js	2026-11-22 20:12:33.465456387 +0700
++++ rental-2026/3d/src/main.js	2026-11-22 23:34:54.983583369 +0700
+@@ -250,7 +250,7 @@
+     if (!intro.update(introDt)) endIntro();
+   }
+   if (mode === 'orbit') orbit.update();
+-  if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }
++  if (mode === 'walk') { walk.update(dt); if (!window.__noGlow) pointer.centreGlow(); }
+   if (mode === 'tour') tour.update(dt);
+   if (mode === 'walk' || mode === 'tour') {
+     const r = roomAt(camera.position.x, camera.position.z);
+@@ -261,4 +261,4 @@
+   calm();
+   renderer.render(scene, camera);
+ });
+-window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; } };
++window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; }, orbit, tvControl: null };

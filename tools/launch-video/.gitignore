@@ -1,0 +1,7 @@
+node_modules/
+frames/
+site/
+hf/assets/
+hf/renders/
+*.png
+*.mp3

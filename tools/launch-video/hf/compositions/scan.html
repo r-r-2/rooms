@@ -1,0 +1,29 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .scanwrap { position: absolute; inset: 0; overflow: hidden; }
+    /* The orange scan line from the site's intro: a bright core with a glow trailing behind it */
+    .beam { position: absolute; top: 0; left: 0; width: 260px; height: 1080px; background: linear-gradient(90deg, rgba(255,106,19,0) 0%, rgba(255,106,19,0.18) 55%, rgba(255,140,60,0.55) 92%, rgba(255,106,19,0) 100%); }
+    .beam i { position: absolute; right: 18px; top: 0; width: 6px; height: 100%; background: #ffb27a; box-shadow: 0 0 18px 6px rgba(255,106,19,0.9), 0 0 60px 18px rgba(255,106,19,0.45); }
+  </style>
+  <div id="root" data-composition-id="scan" data-width="1920" data-height="1080" data-layout-allow-overflow>
+    <div id="scan-0" class="clip scanwrap" data-start="3.8" data-duration="0.42"><div class="beam" id="beam-0"><i></i></div></div>
+    <div id="scan-1" class="clip scanwrap" data-start="7.73" data-duration="0.42"><div class="beam" id="beam-1"><i></i></div></div>
+    <div id="scan-2" class="clip scanwrap" data-start="9.8" data-duration="0.42"><div class="beam" id="beam-2"><i></i></div></div>
+    <div id="scan-3" class="clip scanwrap" data-start="11.66" data-duration="0.42"><div class="beam" id="beam-3"><i></i></div></div>
+    <div id="scan-4" class="clip scanwrap" data-start="13.73" data-duration="0.42"><div class="beam" id="beam-4"><i></i></div></div>
+    <div id="scan-5" class="clip scanwrap" data-start="14.97" data-duration="0.42"><div class="beam" id="beam-5"><i></i></div></div>
+    <div id="scan-6" class="clip scanwrap" data-start="20.35" data-duration="0.42"><div class="beam" id="beam-6"><i></i></div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#beam-0", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 3.8);
+    tl.fromTo("#beam-1", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 7.73);
+    tl.fromTo("#beam-2", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 9.8);
+    tl.fromTo("#beam-3", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 11.66);
+    tl.fromTo("#beam-4", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 13.73);
+    tl.fromTo("#beam-5", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 14.97);
+    tl.fromTo("#beam-6", { x: -260 }, { x: 2180, duration: 0.4, ease: "power2.inOut" }, 20.35);
+    window.__timelines["scan"] = tl;
+  </script>
+</template>

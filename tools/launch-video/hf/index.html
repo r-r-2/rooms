@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      :root { --ground: #dce3e8; --scan: #ff6a13; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { width: 100%; height: 100%; position: relative; }
+      #stage { position: absolute; inset: 0; }
+      #stage video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    </style>
+  </head>
+  <body>
+    <!-- Rooms I've lived in: launch film. 3D footage rendered frame by frame from rooms.rr2.dev; cuts land on kicks. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24.6" data-width="1920" data-height="1080">
+      <div id="stage">
+      <video id="v-a" class="clip" src="assets/clips/A.mp4" data-start="0" data-duration="4.0" data-track-index="0" muted playsinline style="z-index:1"></video>
+      <video id="v-b" class="clip" src="assets/clips/B.mp4" data-start="4.0" data-duration="3.93" data-track-index="0" muted playsinline style="z-index:2"></video>
+      <video id="v-c1" class="clip" src="assets/clips/C1.mp4" data-start="7.93" data-duration="2.07" data-track-index="0" muted playsinline style="z-index:3"></video>
+      <video id="v-c2" class="clip" src="assets/clips/C2.mp4" data-start="10.0" data-duration="1.86" data-track-index="0" muted playsinline style="z-index:4"></video>
+      <video id="v-c3" class="clip" src="assets/clips/C3.mp4" data-start="11.86" data-duration="2.07" data-track-index="0" muted playsinline style="z-index:5"></video>
+      <video id="v-c4" class="clip" src="assets/clips/C4.mp4" data-start="13.93" data-duration="1.24" data-track-index="0" muted playsinline style="z-index:6"></video>
+      <video id="v-d" class="clip" src="assets/clips/D.mp4" data-start="15.17" data-duration="5.38" data-track-index="0" muted playsinline style="z-index:7"></video>
+      <video id="v-bn" class="clip" src="assets/clips/BN.mp4" data-start="6.06" data-duration="1.87" data-media-start="2.06" data-track-index="1" muted playsinline style="z-index:20"></video>
+      <video id="v-card" class="clip" src="assets/clips/endcard.mp4" data-start="20.55" data-duration="4.05" data-track-index="0" muted playsinline style="z-index:21"></video>
+      </div>
+      <div id="scan" data-composition-id="scan" data-composition-src="compositions/scan.html" data-start="0" data-duration="24.6" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080" style="z-index:30"></div>
+      <audio id="music" class="clip" src="assets/track.mp3" data-start="0" data-duration="24.6" data-media-start="49" data-volume="0.9" data-fade-in="0.15" data-fade-out="1.6" data-track-index="3"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      // Day turns to night over the orbit: the night pass fades in on a kick
+      tl.fromTo("#v-bn", { opacity: 0 }, { opacity: 1, duration: 0.55, ease: "sine.inOut" }, 6.06);
+      // A small zoom punch on each kick while the footage plays
+      const PUNCH = [4.0, 4.62, 5.24, 6.06, 7.31]; // only during the reveal from above; eye-level shots stay steady
+      for (const k of PUNCH) {
+        tl.fromTo("#stage", { scale: 1 }, { scale: 1.022, duration: 0.07, ease: "power2.out", immediateRender: false }, k);
+        tl.to("#stage", { scale: 1, duration: 0.3, ease: "power3.out" }, k + 0.07);
+      }
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
