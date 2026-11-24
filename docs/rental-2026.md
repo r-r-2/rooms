@@ -24,7 +24,13 @@ Coordinates in metres, `x` east, `z` south, ceiling `H = 2.6`. Bounds live at th
 ## Kitchen
 
 - Window goes **down to the floor**. The blinds go to the floor too, tilt, and can close the window fully.
-- Fridge (it opens; it's also a shot in the launch video).
+- Counter on the east wall (from the scan): white top from z -3.11 to -1.51 with a raised back lip, oak base cabinets
+  (drawers on the north side, two doors on the south). The oak corner north of it (-3.59 to -3.11) is where the desk wraps round.
+- **Black induction hob on the north side (-2.76 to -2.46), steel sink on the south side (-2.28 to -1.87)** with the tap behind it.
+- Above the counter, north to south: open white shelves with the microwave on the bottom one, a tall black glass hood over the hob,
+  cream cabinets over the sink and the fridge with a top row to 2.56 m, and an open shelf under the cabinet above the sink.
+  Beige tiled splashback.
+- Fridge at z -1.43 to -0.88 (it opens; it's also a shot in the launch video).
 - Desk with two white chairs, offset from the table.
 - Glass partition between kitchen and bedroom side: two halves, the west half open.
 

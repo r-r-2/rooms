@@ -26,19 +26,52 @@ export function kitchen() {
 
   glassPartition(g, SPLIT, W, E);
 
-  // Counter along the east wall: base cabinets, dark top, sink, hob, wall cabinets, fridge
-  const cx = E - 0.6;
-  box(g, [cx, 0, N + 0.1], [E, 0.86, -1.2], mat.cabinet, { collide: true });
-  box(g, [cx - 0.02, 0.86, N + 0.1], [E, 0.9, -1.2], mat.counter);
-  box(g, [cx + 0.12, 0.88, -2.9], [E - 0.12, 0.91, -2.4], mat.steel);
-  box(g, [cx + 0.1, 0.9, -2.0], [E - 0.1, 0.92, -1.45], mat.dark);
-  box(g, [E - 0.35, 1.5, N + 0.1], [E, 2.25, -1.2], mat.cabinet);
+  // Kitchen run on the east wall, measured from the scan (z north → south):
+  // oak corner top -3.59…-3.11 (the desk wraps round), white counter -3.11…-1.51 with the hob (north) and the sink (south),
+  // oak base cabinets below (drawers on the left, two doors on the right), tiled splashback.
+  // Above: open white shelves with the microwave, a black glass hood over the hob, cream cabinets over the sink and fridge,
+  // and an open shelf under the cabinet above the sink.
+  const cx = E - 0.6, K0 = -3.59, K1 = -3.11, K2 = -1.51;
+  const whiteTop = new THREE.MeshStandardMaterial({ color: 0xf3f0ea, roughness: 0.35 });
+  const blackGlass = new THREE.MeshStandardMaterial({ color: 0x0f1316, roughness: 0.08, metalness: 0.4 });
+  const cream = new THREE.MeshStandardMaterial({ color: 0xe4dac8, roughness: 0.5 });
+  const splash = new THREE.MeshStandardMaterial({ color: 0xcdbfad, roughness: 0.3 });
+  box(g, [cx, 0.08, K0], [E, 0.86, K2], mat.oakDoor, { collide: true });            // base cabinets
+  box(g, [cx + 0.03, 0, K0], [E, 0.08, K2], mat.dark);                               // kick plate
+  for (const z of [-2.94, -2.31, -1.9]) box(g, [cx - 0.003, 0.08, z - 0.004], [cx + 0.003, 0.86, z + 0.004], mat.dark); // door and drawer gaps
+  for (const y of [0.67, 0.45]) box(g, [cx - 0.003, y - 0.004, -2.94], [cx + 0.003, y + 0.004, -2.31], mat.dark);       // drawer fronts
+  box(g, [cx - 0.02, 0.86, K0], [E, 0.9, K1], mat.oak);                              // oak corner top
+  box(g, [cx - 0.02, 0.86, K1], [E, 0.9, K2], whiteTop);                             // white counter
+  box(g, [E - 0.05, 0.9, K1], [E, 0.98, K2], whiteTop);                              // raised back lip
+  box(g, [E - 0.01, 0.98, K1], [E, 1.5, K2], splash, { shadow: false });            // tiled splashback
+  box(g, [3.11, 0.9, -2.76], [3.6, 0.912, -2.46], blackGlass);                       // induction hob
+  box(g, [3.14, 0.9, -2.28], [3.55, 0.906, -1.87], mat.steel);                       // sink rim
+  box(g, [3.19, 0.901, -2.23], [3.5, 0.907, -1.92], mat.dark);                       // sink bowl (reads as depth)
+  box(g, [3.57, 0.9, -2.09], [3.6, 1.16, -2.06], mat.steel);                         // tap
+  box(g, [3.43, 1.13, -2.09], [3.6, 1.16, -2.06], mat.steel);                        //   spout
+  // Open white shelves, north end, microwave on the bottom one
+  const sh0 = E - 0.36, sz0 = -3.55, sz1 = -2.92;
+  for (const z of [sz0, sz1 - 0.02]) box(g, [sh0, 1.3, z], [E, 2.12, z + 0.02], mat.white);
+  for (const y of [1.3, 1.67, 1.88, 2.1]) box(g, [sh0, y, sz0], [E, y + 0.02, sz1], mat.white);
+  box(g, [sh0 + 0.04, 1.32, -3.5], [E - 0.02, 1.62, -2.99], mat.steel);              // microwave
+  box(g, [sh0 + 0.035, 1.36, -3.42], [sh0 + 0.04, 1.58, -3.12], mat.dark);           //   its window
+  // Black glass hood unit over the hob
+  box(g, [E - 0.38, 1.5, -2.91], [E, 2.56, -2.33], blackGlass);
+  box(g, [E - 0.4, 1.48, -2.91], [E, 1.51, -2.33], mat.steel);
+  // Cream cabinets: over the sink, over the fridge, and a top row to the ceiling line
+  box(g, [E - 0.35, 1.7, -2.33], [E, 2.11, K2], cream);
+  box(g, [E - 0.35, 1.79, -1.49], [E, 2.11, -0.78], cream);
+  box(g, [E - 0.35, 2.13, -2.33], [E, 2.56, -0.66], cream);
+  box(g, [E - 0.355, 2.11, -2.33], [E, 2.13, -0.66], mat.dark);                      // shadow gap between the rows
+  // Open shelf under the cabinet above the sink
+  box(g, [E - 0.25, 1.2, -2.41], [E, 1.22, K2], cream);
+  box(g, [E - 0.25, 1.48, -2.33], [E, 1.7, K2], cream);
   // Fridge: freezer on top, door gap, two handles, kick plate (front faces west)
   const fridge = new THREE.MeshStandardMaterial({ color: 0xdfe2e4, roughness: 0.25, metalness: 0.55 });
-  box(g, [cx + 0.07, 0.06, -1.15], [E, 1.75, -0.6], fridge, { collide: true });
-  box(g, [cx + 0.064, 0.1, -1.12], [cx + 0.067, 1.7, -0.63], mat.white);   // lit white inside, seen when a door opens
-  box(g, [cx + 0.02, 0, -1.13], [cx + 0.08, 0.06, -0.62], mat.dark);
-  const fd = { x: cx + 0.045, z: -1.15, along: 'z', dir: 1, width: 0.55, thick: 0.05, material: fridge, openAngle: -Math.PI / 2 * 0.85 };
+  box(g, [cx + 0.07, 0.06, -1.43], [E, 1.75, -0.88], fridge, { collide: true });
+  box(g, [cx + 0.064, 0.1, -1.4], [cx + 0.067, 1.7, -0.91], mat.white);   // lit white inside, seen when a door opens
+  box(g, [cx + 0.02, 0, -1.41], [cx + 0.08, 0.06, -0.9], mat.dark);
+  const fd = { x: cx + 0.045, z: -1.43, along: 'z', dir: 1, width: 0.55, thick: 0.05, material: fridge, openAngle: -Math.PI / 2 * 0.85 };
   hingedDoor(g, { ...fd, y0: 1.2, height: 0.55 });   // freezer
   hingedDoor(g, { ...fd, y0: 0.06, height: 1.12 });  // main door
   return g;
