@@ -261,15 +261,34 @@ function chair(g, x, z, seat = 0.44) {
   }
 }
 
-// Wall-mounted AC: tap to swing its flap open (and, with sound on, start its hum).
-// at = hinge point along the bottom front edge; faces = 'z' for a unit facing -x, 'x' for one facing +z.
+// Wall-mounted split AC (both units from the scan): cream body, a darker intake grille on top, the air outlet slot
+// along the bottom with its louvre flap, and a small display. Tap to swing the flap open (and, with sound on, start its hum).
+// body = the unit's box; at = hinge point along the bottom front edge; faces: 'x' = faces +z, 'nz' = faces -z, 'z' = faces -x.
 export function acUnit(g, body, at, faces) {
-  // faces: 'z' = unit faces -x, 'x' = faces +z, 'nz' = faces -z
   const alongZ = faces === 'z';
-  const flap = new THREE.Mesh(alongZ ? new THREE.BoxGeometry(0.1, 0.012, 0.76) : new THREE.BoxGeometry(0.76, 0.012, 0.1), mat.ac.clone());
+  const cream = new THREE.MeshStandardMaterial({ color: 0xe8dcc0, roughness: 0.35 }); // warmer than the walls, as in the scan
+  const grille = new THREE.MeshStandardMaterial({ color: 0xb9b09c, roughness: 0.7 });
+  const slot = new THREE.MeshStandardMaterial({ color: 0x3a3a38, roughness: 0.8 });
+  body.material = cream;
+  const bb = new THREE.Box3().setFromObject(body);
+  const n = faces === 'x' ? 1 : faces === 'nz' ? -1 : -1;        // front direction along z (or x for 'z')
+  const front = alongZ ? (n < 0 ? bb.min.x : bb.max.x) : (n > 0 ? bb.max.z : bb.min.z);
+  const L0 = alongZ ? bb.min.z : bb.min.x, L1 = alongZ ? bb.max.z : bb.max.x, y0 = bb.min.y, y1 = bb.max.y;
+  const strip = (a, b, ya, yb, depth, out, m) => { // a strip along the unit's length, standing proud of the front by 'out'
+    const f0 = front - n * (depth - out), f1 = front + n * out, lo = Math.min(f0, f1), hi = Math.max(f0, f1);
+    return alongZ ? box(g, [lo, ya, a], [hi, yb, b], m) : box(g, [a, ya, lo], [b, yb, hi], m);
+  };
+  strip(L0 + 0.02, L1 - 0.02, y0 + 0.015, y0 + 0.05, 0.12, 0.004, slot);          // outlet slot under the front
+  for (const t of [0.02, 0.05, 0.08, 0.11, 0.14]) strip(L0 + 0.04, L1 - 0.04, y1 - 0.003, y1 + 0.002, t + 0.012, -t, grille); // intake grille bars on top
+  strip(L0 + 0.01, L1 - 0.01, y0 + 0.07, y0 + 0.075, 0.01, 0.002, grille);        // seam above the outlet
+  strip(L0 + 0.01, L1 - 0.01, y1 - 0.06, y1 - 0.056, 0.01, 0.002, grille);        // seam below the top panel
+  const led = new THREE.MeshStandardMaterial({ color: 0x2c8f6a, emissive: 0x2c8f6a, emissiveIntensity: 0 });
+  strip(L1 - 0.09, L1 - 0.07, y0 + 0.09, y0 + 0.1, 0.005, 0.003, led);            // display light, on when running
+  const len = L1 - L0 - 0.04;
+  const flap = new THREE.Mesh(alongZ ? new THREE.BoxGeometry(0.1, 0.012, len) : new THREE.BoxGeometry(len, 0.012, 0.1), cream.clone());
   const pivot = new THREE.Group(); pivot.position.set(...at); g.add(pivot);
   flap.position.set(alongZ ? 0.05 : 0, 0, faces === 'x' ? -0.05 : faces === 'nz' ? 0.05 : 0); pivot.add(flap);
   const tilt = faces === 'nz' ? 0.8 : -0.8;
   let on = false;
-  interactive([body, flap], () => { on = !on; tween(pivot.rotation, alongZ ? 'z' : 'x', on ? tilt : 0, 0.8); }, 'ac');
+  interactive([body, flap], () => { on = !on; led.emissiveIntensity = on ? 1.2 : 0; tween(pivot.rotation, alongZ ? 'z' : 'x', on ? tilt : 0, 0.8); }, 'ac');
 }

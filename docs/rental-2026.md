@@ -16,7 +16,8 @@ Coordinates in metres, `x` east, `z` south, ceiling `H = 2.6`. Bounds live at th
 - Sofa without a chaise.
 - Centre table has a **glass top**.
 - TV unit along the wall; the laundry and toilet doors are to the left of the TV.
-- Shoe cabinet by the entrance.
+- Shoe cabinet by the entrance, with the hall AC above the shelves (cream split unit, outlet slot at the bottom).
+- Bedroom AC high on the north wall, right of the curtains.
 - Three-panel mountain print on the wall, drawn in code.
 - TV shows a short, light screen of its own (no streaming logos, no real shows).
 - Balcony sliding door with a grill.
