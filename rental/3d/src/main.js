@@ -141,7 +141,9 @@ const onTourProgress = (f, r) => {
   $('tour-room').innerHTML = `${ROOMS[r][0]} <small>${r + 1} of ${ROOMS.length}</small>`;
   $('btn-nextroom').textContent = r === ROOMS.length - 1 ? 'Finish' : 'Next room';
 };
+const closeDoorsNear = (x, z) => { for (const c of colliders) { const b = c.box; if (c.obj.userData.autoClose && x > b.min.x - 0.9 && x < b.max.x + 0.9 && z > b.min.z - 0.9 && z < b.max.z + 0.9) c.obj.userData.autoClose(); } };
 const tour = new Tour(camera, nearDoors, onTourProgress, () => { track('walkthrough_complete'); setMode('orbit'); });
+tour.closeDoorsNear = closeDoorsNear;
 $('btn-nextroom').onclick = () => { setPaused(false); tour.nextRoom(); };
 const show = (id, on) => ($(id).hidden = !on);
 

@@ -17,8 +17,7 @@ export const PATH = [
   { x: 1.4, z: -0.05 },
   { x: 0.95, z: -0.05 },                                                       // bedroom door
   { x: 0.65, z: -0.3, looks: [[-2.0, 1.15, -1.2, 2.6], [-1.1, 1.3, -2.76, 2.4]] }, // bedroom: bed and prints, then the balcony
-  { x: 0.3, z: -0.2, looks: [[0.28, 1.25, 0.95, 2.2]] },                        // dressing table
-  { x: 0.1, z: 0.22 },                                                         // past the dressing stool
+  { x: 0.05, z: -0.4, close: [0.95, -0.05], looks: [[0.52, 1.2, 0.9, 2.6]] },   // dressing table and mirror: shut the bedroom door (it swings across them) and look straight on
   { x: -0.75, z: 0.55 },
   { x: -1.25, z: 1.5, looks: [[0.2, 1.05, 1.65, 1.8]] },                      // glance into the toilet as its door slides open
   { x: -0.82, z: 2.2 },                                                        // lined up with the wash-area doorway
@@ -99,13 +98,13 @@ export class Tour {
     return ahead.lerp(this.tmp.set(x, y, z), k);
   }
 
-  place(s, look, lerp) {
+  place(s, look, lerp, doors = true) {
     const p = this.curve.getPointAt(Math.min(1, s / this.len));
     this.lookAt.lerp(look, lerp);
     const bob = still ? 0 : Math.sin(this.bob) * BOB * Math.min(1, this.v / SPEED);
     this.camera.position.set(p.x, EYE + bob, p.z);
     this.camera.lookAt(this.lookAt);
-    this.nearDoors(p.x, p.z);
+    if (doors) this.nearDoors(p.x, p.z);
   }
 
   update(dt) {
@@ -125,9 +124,10 @@ export class Tour {
     } else if (i !== undefined) {
       // Standing: look at each thing in turn
       this.v = 0;
+      if (this.look === 0 && this.lookT === 0 && PATH[i].close) this.closeDoorsNear?.(...PATH[i].close); // on arrival
       const looks = PATH[i].looks, [x, y, z, sec] = looks[this.look];
       this.lookT += dt;
-      this.place(this.s, this.tmp.set(x, y, z), 1 - Math.exp(-dt * 2.2));
+      this.place(this.s, this.tmp.set(x, y, z), 1 - Math.exp(-dt * 2.2), !PATH[i].close); // a stop that shut a door leaves it shut
       if (this.lookT > sec) {
         this.lookT = 0; this.look += 1;
         if (this.look >= looks.length) { this.look = 0; this.si += 1; }

@@ -58,6 +58,7 @@ export function hingedDoor(parent, { x, z, along, dir, width, height = 2.08, thi
     tween(pivot, 'rotation.y', isOpen ? openAngle : 0, 0.7, () => leaf.userData.box?.setFromObject(leaf));
   }, 'door');
   if (auto) leaf.userData.autoOpen = () => { if (!isOpen) item.tap(); }; // walking into it opens it
+  if (auto) leaf.userData.autoClose = () => { if (isOpen) item.tap(); }; // the walkthrough can shut it to see past it
   return pivot;
 }
 
