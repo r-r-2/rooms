@@ -19,12 +19,12 @@ export function kitchen() {
   let shut = false; // tap to tilt the slats shut (they overlap and block the window) or open
   interactive(bl, () => { shut = !shut; bl.children.forEach((sl) => sl.userData.slat && tween(sl.rotation, 'x', shut ? 1.45 : 0.12, 0.6)); }, 'blinds');
 
-  // Desk along the window at counter height, running from the west wall into the kitchen counter's oak corner (from the scan),
+  // Desk along the window about 10 cm above the counter, running from the west wall into the kitchen counter's oak corner (from the scan),
   // a hand's width off the glass, clear of the blinds; an oak end panel with a small shelf at the west end; two white counter stools
-  box(g, [W, 0.86, N + 0.11], [E - 0.62, 0.9, -3.11], mat.oakDoor);
-  box(g, [W, 0, N + 0.11], [W + 0.04, 0.86, -3.11], mat.oak, { collide: true });
+  box(g, [W, 0.97, N + 0.11], [E - 0.62, 1.01, -3.11], mat.oakDoor); // ~10 cm above the counter, level with its back lip
+  box(g, [W, 0, N + 0.11], [W + 0.04, 0.97, -3.11], mat.oak, { collide: true });
   box(g, [W + 0.04, 0.3, N + 0.11], [W + 0.34, 0.32, -3.11], mat.oak);
-  for (const cx of [1.6, 2.5]) chair(g, cx, -2.75, 0.65);
+  for (const cx of [1.6, 2.5]) chair(g, cx, -2.75, 0.72);
 
   glassPartition(g, SPLIT, W, E);
 
@@ -42,7 +42,7 @@ export function kitchen() {
   box(g, [cx + 0.03, 0, K0], [E, 0.08, K2], mat.dark);                               // kick plate
   for (const z of [-2.94, -2.31, -1.9]) box(g, [cx - 0.003, 0.08, z - 0.004], [cx + 0.003, 0.86, z + 0.004], mat.dark); // door and drawer gaps
   for (const y of [0.67, 0.45]) box(g, [cx - 0.003, y - 0.004, -2.94], [cx + 0.003, y + 0.004, -2.31], mat.dark);       // drawer fronts
-  box(g, [cx - 0.02, 0.86, K0], [E, 0.9, K1], mat.oakDoor);                          // oak corner top
+  box(g, [cx - 0.02, 0.86, K0], [E, 1.01, K1], mat.oakDoor);                         // oak corner, raised to the desk's height
   box(g, [cx - 0.02, 0.86, K1], [E, 0.9, K2], whiteTop);                             // white counter
   box(g, [E - 0.05, 0.9, K1], [E, 0.98, K2], whiteTop);                              // raised back lip
   box(g, [E - 0.01, 0.98, K1], [E, 1.17, K2], splash, { shadow: false });           // tiled splashback, up to the niches
