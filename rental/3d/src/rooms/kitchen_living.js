@@ -13,8 +13,9 @@ export function kitchen() {
   wall(g, 'x', N - 0.05, W - 0.05, E + 0.05, mat.wall, [[1.3, 3.4, 0.02, 2.3]]); // window down to the floor
   wall(g, 'z', W, N, -2.76, mat.wall);
   wall(g, 'z', E + 0.05, N, SPLIT, mat.wall, [[-2.42, -1.52, 1.19, 1.5], [-2.32, -1.52, 1.52, 1.7]]); // niches above the tap
-  box(g, [1.3, 0.02, N - 0.06], [3.4, 2.3, N - 0.04], new THREE.MeshStandardMaterial({ color: 0x5f6f76, roughness: 0.05, transparent: true, opacity: 0.05, depthWrite: false }), { shadow: false, collide: true }); // clear, to see the view; solid, so you cannot walk out into the air (dark and faint so it does not go milky at night)
+  box(g, [1.3, 0.02, N - 0.06], [3.4, 2.3, N - 0.04], new THREE.MeshStandardMaterial({ color: 0x5f6f76, roughness: 0.05, transparent: true, opacity: 0.05, depthWrite: false }), { shadow: false }); // clear, to see the view (dark and faint so it does not go milky at night)
   const bl = blinds(1.3, 3.4, 0.03, 2.27, N + 0.05); // full height, like the window
+  box(g, [1.3, 0, N - 0.24], [3.4, 2.3, N - 0.23], mat.wall, { collide: true }).visible = false; // invisible stop just outside the glass: you can stand between the blinds and the window, but not walk out
   g.add(bl);
   let shut = false; // tap to tilt the slats shut (they overlap and block the window) or open
   interactive(bl, () => { shut = !shut; bl.children.forEach((sl) => sl.userData.slat && tween(sl.rotation, 'x', shut ? 1.45 : 0.12, 0.6)); }, 'blinds');
