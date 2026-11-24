@@ -25,7 +25,12 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--ink); outline-o
 .place-name { font: 500 16px/1.2 var(--serif); color: var(--ink); text-decoration: none; padding: 10px 0; }
 .place-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .where { position: absolute; left: 50%; transform: translateX(-50%); font: 500 16px/1.2 var(--serif); text-shadow: 0 0 12px rgba(247, 248, 247, 0.95), 0 0 2px rgba(247, 248, 247, 0.9); pointer-events: none; }
-#btn-more { margin-left: auto; }
+#btn-time { margin-left: auto; margin-right: 8px; }
+#btn-lights { margin-left: auto; margin-right: 8px; }
+#btn-lights:not([hidden]) + #btn-time { margin-left: 0; }
+#btn-more { margin-left: 0; }
+#btn-time:not([hidden]) + #btn-more { margin-left: 0; }
+#btn-time[hidden] + #btn-more { margin-left: auto; }
 
 /* Bottom: Rooms, then the three views */
 .bottom { position: fixed; left: 0; right: 0; bottom: var(--bot); display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
@@ -72,6 +77,7 @@ dialog.sheet::backdrop { background: rgba(46, 38, 32, 0.12); }
 .switch[aria-checked="true"] { background: var(--ink); } .switch[aria-checked="true"]::after { transform: translateX(20px); }
 .credit { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
 .credit a { color: inherit; }
+.credit + .credit { margin-top: 6px; font-size: 12px; }
 
 .roomgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .roomgrid button { min-height: 52px; padding: 0 16px; border-radius: var(--r); text-align: left; font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--line); }

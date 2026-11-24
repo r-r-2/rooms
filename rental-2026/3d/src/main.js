@@ -13,12 +13,13 @@ import { makeDaylight } from './daylight.js';
 import { Tour, ROOMS } from './tour.js';
 import { Intro } from './intro.js';
 import { roomAt, ROOM_SHOTS } from './ui.js';
+import { cityView, landmark } from './view.js';
 
 const $ = (id) => document.getElementById(id);
 const touch = matchMedia('(pointer: coarse)').matches;
 
 // Renderer, scene, lights
-const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true, logarithmicDepthBuffer: true }); // the city view spans 5 cm to 5 km: a normal depth buffer flickers far away
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -39,6 +40,27 @@ home.add(bedroom(), kitchen(), living(), corridor(), toilet());
 const backdrops = []; home.traverse((o) => { if (o.userData.backdrop) backdrops.push(o); });
 backdrops.forEach((o) => scene.attach(o)); // sky planes outside the home's bounds
 scene.add(home);
+const city = cityView(); scene.add(city); backdrops.push(city); window.__city = city; window.__landmark = landmark;
+// Tap the tall building to change its lights 
+const landmarkRay = new THREE.Raycaster(), lightsToast = Object.assign(document.createElement('div'), { className: 'pill' });
+Object.assign(lightsToast.style, { position: 'fixed', left: '50%', bottom: '84px', transform: 'translateX(-50%)', transition: 'opacity .4s', opacity: 0, pointerEvents: 'none' });
+document.body.append(lightsToast); let toastT;
+renderer.domElement.addEventListener('click', (e) => {
+  if (!city.visible || !landmark.meshes) return;
+  const r = renderer.domElement.getBoundingClientRect(); landmarkRay.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  if (landmarkRay.intersectObjects(landmark.meshes, false).length) nextLook();
+}); // the view outside
+const toast = (text, ms) => { lightsToast.textContent = text; lightsToast.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => (lightsToast.style.opacity = 0), ms); };
+const setLook = (i) => { landmark.mode = i; landmark.u.mode.value = i; };
+function nextLook() { setLook((landmark.mode + 1) % landmark.MODES.length); toast(`Building lights: ${landmark.MODES[landmark.mode]}`, 1600); }
+// The first time the tower lights come on: say it can be tapped, and flick through the looks once
+let lightsOn = false, hintTimer;
+function towerHint() {
+  try { if (localStorage.getItem('towerHint')) return; localStorage.setItem('towerHint', '1'); } catch (e) { if (towerHint.done) return; }
+  towerHint.done = true; const keep = landmark.mode; let i = 0;
+  toast('Tap the tall building to change its lights', 4000);
+  clearInterval(hintTimer); hintTimer = setInterval(() => { i++; if (i < landmark.MODES.length) setLook((keep + i) % landmark.MODES.length); else { setLook(keep); clearInterval(hintTimer); } }, 450);
+}
 const ceilings = [], colliders = [], walls = [];
 home.updateMatrixWorld(true); // door leaves sit inside hinge pivots: their boxes need world positions
 home.traverse((o) => {
@@ -61,7 +83,7 @@ const cutaway = (on) => { for (const w of walls) w.visible = !on || !w.userData.
 const fixtures = downlights(scene);
 
 // Cameras and controls
-const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 100);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 5000);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.49; orbit.enabled = false;
 const walk = new Walk(camera, renderer.domElement, bounds, $('hint'), colliders, $('pad'));
@@ -80,12 +102,28 @@ const fitDollhouse = () => { const k = innerWidth < innerHeight ? 2.1 : 1; dollh
 fitDollhouse();
 
 // Time of day for the dollhouse and walk views (the sun button cycles through these)
-const TIMES = [[7, 'Morning'], [12.5, 'Midday'], [18.5, 'Evening'], [22, 'Night']];
+const TIMES = [[7, 'Morning'], [12.5, 'Midday'], [17.75, 'Evening'], [22, 'Night']];
 let timeIdx = 0;
+// One tap to the next time of day: sunrise, sun, sunset, moon
+const TIME_ICONS = [
+  '<path d="M3 17h18M7 17a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.8 8.8M18.4 10.6l1.8-1.8"/>',
+  '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
+  '<path d="M3 17h18M7 17a5 5 0 0 1 10 0M12 10V7M9 4l3 3 3-3"/>',
+  '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+];
+function showTimeButton(i) {
+  $('btn-time').innerHTML = `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TIME_ICONS[i]}</svg>`;
+  $('btn-time').setAttribute('aria-label', `Time of day: ${TIMES[i][1]}. Tap for the next`);
+}
+$('btn-lights').onclick = nextLook;
+$('btn-time').onclick = () => applyTime((timeIdx + 1) % TIMES.length);
 function applyTime(i) {
-  timeIdx = i;
+  timeIdx = i; showTimeButton(i);
   const [h, label] = TIMES[i], { night } = setHour(h);
-  for (const [name, l] of Object.entries(roomLights)) l.set(night || (h > 18 && ['living', 'kitchen'].includes(name)));
+  city.setTime(h, night); scene.fog = new THREE.Fog(city.fogColor || scene.background.clone(), 900, 5000);
+  lightsOn = night; const towerOn = lightsOn && mode !== 'intro'; // (mode is only read once the lights are on, after start-up)
+  $('btn-lights').hidden = !towerOn; if (towerOn) setTimeout(towerHint, 600);
+  for (const [name, l] of Object.entries(roomLights)) l.set(night || (h > 17 && ['living', 'kitchen'].includes(name)));
   $('times').querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
 }
 $('times').innerHTML = TIMES.map(([, label]) => `<button aria-pressed="false">${label}</button>`).join('');
@@ -111,7 +149,7 @@ function setMode(m, pose) {
   if (m !== prev && m !== 'intro' && prev !== 'intro' && prev !== 'none') track('choose_view', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[m] });
   if (prev === 'tour' && m !== 'tour') tour.stop();
   ['btn-orbit', 'btn-walk', 'btn-day'].forEach((id) => $(id).setAttribute('aria-pressed', String({ orbit: 'btn-orbit', walk: 'btn-walk', tour: 'btn-day' }[m] === id)));
-  show('bottom', m === 'orbit' || m === 'walk'); show('modes', m === 'orbit'); show('title', m === 'orbit'); show('btn-more', m !== 'intro');
+  show('bottom', m === 'orbit' || m === 'walk'); show('modes', m === 'orbit'); show('title', m === 'orbit'); show('btn-more', m !== 'intro'); show('btn-time', m !== 'intro'); show('btn-lights', m !== 'intro' && lightsOn);
   show('btn-close', m === 'walk' || m === 'tour'); show('roompill', m === 'walk'); show('pad', m === 'walk' && touch); show('aim', m === 'walk');
   $('btn-close').setAttribute('aria-label', m === 'tour' ? 'Stop the walkthrough' : 'Back to the view from above');
   document.body.classList.toggle('walking', m === 'walk'); wake();
@@ -253,6 +291,7 @@ renderer.setAnimationLoop(() => {
   if (mode === 'orbit') orbit.update();
   if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }
   if (mode === 'tour') tour.update(dt);
+  if (city.visible) city.update(dt);
   if (mode === 'walk' || mode === 'tour') {
     const r = roomAt(camera.position.x, camera.position.z);
     if (r && r !== shownRoom) { $('roompill').textContent = shownRoom = r; }

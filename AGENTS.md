@@ -24,6 +24,7 @@ Plain static site. No build step, no framework, no bundler. Deployed by Cloudfla
 ## Privacy (hard rules)
 
 - Never publish where a place is: no address, building or condo name, area, street, floor, city, or exact dates. A place is labelled only by type and year, e.g. "Short-term rental, 2026". A `city` field exists in `places.json` but stays `null` unless Rahul asks.
+- Exception, Rahul's call (Nov 2026): the rental-2026 view outside the windows is built from real map data (OpenStreetMap, Overture), so the building can be found from it. Still never name it, the area, the bank, the train line or the floor in text, comments, UI or commit messages; the tower is "the tall building" and the train "the skytrain". Keep the map credit in the menu (ODbL).
 - Never commit raw scans (`.glb`, `.ply`, `.usdz`, scan photos or video). They contain real photos, including people. `.gitignore` blocks the common formats.
 - Wall art, prints and screens are drawn in code. No family photos, nameplates or recognisable people.
 - Link previews (`og:image`) use an eye-level still, never the layout from above: the layout is meant to be a surprise.
@@ -64,6 +65,7 @@ After editing `places.json`, `style.css` or `scripts/build.mjs`, run `node scrip
 | `sound.js` | Room tone and effects, synthesised with Web Audio. Off by default |
 | `walk.js` | First-person walking: drag to look, keys or touch pad, collisions |
 | `tour.js` | The walkthrough: one smooth path with head bob, stops that look around, skip by room |
+| `view.js` | The view outside: buildings, roads, trees and skytrain from map data (`view-data.js`, `view-overture*.js`), sky by hour, the lit tall building (tap or the bulb button to change its lights), sunset glint on glass. Coordinates are metres from the building, never lat/lon |
 | `intro.js` | LiDAR-style scan sweep that reveals the place, then the lights ripple on |
 | `ui.js` | Room zones (`roomAt`) and camera shots per room |
 

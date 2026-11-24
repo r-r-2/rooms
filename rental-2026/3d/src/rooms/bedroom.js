@@ -24,7 +24,7 @@ export function bedroom() {
   wall(g, 'z', W - 0.05, N, S, mat.wall);
   wall(g, 'z', E + 0.05, N, -0.36, mat.wall); // open to the living room from z -0.36
   // Sliding glass door onto a small balcony
-  const clear = new THREE.MeshStandardMaterial({ color: 0xcfe3ea, roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false });
+  const clear = new THREE.MeshStandardMaterial({ color: 0x5f6f76, roughness: 0.05, transparent: true, opacity: 0.07, depthWrite: false }); // dark and faint so it does not go milky at night
   slidingGlass(g, { axis: 'x', at: N - 0.05, from: WIN[0], to: WIN[1], height: 2.28, glass: clear }); // sliding door to the balcony
   balcony(g);
 
@@ -163,5 +163,5 @@ function balcony(g) {
     gr.addColorStop(0, '#9cc3df'); gr.addColorStop(0.55, '#e3edf2'); gr.addColorStop(0.75, '#f3e6d6'); gr.addColorStop(1, '#d9d4cc');
     c.fillStyle = gr; c.fillRect(0, 0, w, h);
   }) }));
-  sky.position.set(-0.6, 2, z0 - 9); sky.userData.backdrop = true; g.add(sky);
+  // sky plane dropped: the city view is outside now
 }
