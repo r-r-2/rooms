@@ -19,10 +19,12 @@ export function kitchen() {
   let shut = false; // tap to tilt the slats shut (they overlap and block the window) or open
   interactive(bl, () => { shut = !shut; bl.children.forEach((sl) => sl.userData.slat && tween(sl.rotation, 'x', shut ? 1.45 : 0.12, 0.6)); }, 'blinds');
 
-  // Desk / dining table against the window, with two white chairs
-  box(g, [1.15, 0.72, N + 0.11], [2.95, 0.76, N + 0.69], mat.oak); // a hand's width off the glass, clear of the blinds
-  for (const x of [1.18, 2.9]) box(g, [x, 0, N + 0.14], [x + 0.04, 0.72, N + 0.66], mat.oak, { collide: true });
-  for (const cx of [1.6, 2.5]) chair(g, cx, N + 1.04);
+  // Desk along the window at counter height, running from the west wall into the kitchen counter's oak corner (from the scan),
+  // a hand's width off the glass, clear of the blinds; an oak end panel with a small shelf at the west end; two white counter stools
+  box(g, [W, 0.86, N + 0.11], [E - 0.62, 0.9, -3.11], mat.oakDoor);
+  box(g, [W, 0, N + 0.11], [W + 0.04, 0.86, -3.11], mat.oak, { collide: true });
+  box(g, [W + 0.04, 0.3, N + 0.11], [W + 0.34, 0.32, -3.11], mat.oak);
+  for (const cx of [1.6, 2.5]) chair(g, cx, -2.75, 0.65);
 
   glassPartition(g, SPLIT, W, E);
 
@@ -40,7 +42,7 @@ export function kitchen() {
   box(g, [cx + 0.03, 0, K0], [E, 0.08, K2], mat.dark);                               // kick plate
   for (const z of [-2.94, -2.31, -1.9]) box(g, [cx - 0.003, 0.08, z - 0.004], [cx + 0.003, 0.86, z + 0.004], mat.dark); // door and drawer gaps
   for (const y of [0.67, 0.45]) box(g, [cx - 0.003, y - 0.004, -2.94], [cx + 0.003, y + 0.004, -2.31], mat.dark);       // drawer fronts
-  box(g, [cx - 0.02, 0.86, K0], [E, 0.9, K1], mat.oak);                              // oak corner top
+  box(g, [cx - 0.02, 0.86, K0], [E, 0.9, K1], mat.oakDoor);                          // oak corner top
   box(g, [cx - 0.02, 0.86, K1], [E, 0.9, K2], whiteTop);                             // white counter
   box(g, [E - 0.05, 0.9, K1], [E, 0.98, K2], whiteTop);                              // raised back lip
   box(g, [E - 0.01, 0.98, K1], [E, 1.17, K2], splash, { shadow: false });           // tiled splashback, up to the niches
@@ -230,13 +232,14 @@ export function glassPartition(g, z, x0, x1) {
 }
 
 // White dining chair facing north (towards the desk), centred at (x, z).
-function chair(g, x, z) {
+function chair(g, x, z, seat = 0.44) {
   const w = 0.42, d = 0.42;
-  box(g, [x - w / 2, 0.44, z - d / 2], [x + w / 2, 0.48, z + d / 2], mat.white, { collide: true });
-  box(g, [x - w / 2, 0.48, z + d / 2 - 0.04], [x + w / 2, 0.88, z + d / 2], mat.white);
+  box(g, [x - w / 2, seat, z - d / 2], [x + w / 2, seat + 0.04, z + d / 2], mat.white, { collide: true });
+  box(g, [x - w / 2, seat + 0.04, z + d / 2 - 0.04], [x + w / 2, seat + 0.44, z + d / 2], mat.white);
+  box(g, [x - w / 2 + 0.03, 0.28, z - d / 2 + 0.03], [x + w / 2 - 0.03, 0.3, z - d / 2 + 0.05], mat.white); // footrest
   for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     const lx = x + dx * (w / 2 - 0.03), lz = z + dz * (d / 2 - 0.03);
-    box(g, [lx - 0.015, 0, lz - 0.015], [lx + 0.015, 0.44, lz + 0.015], mat.white);
+    box(g, [lx - 0.015, 0, lz - 0.015], [lx + 0.015, seat, lz + 0.015], mat.white);
   }
 }
 

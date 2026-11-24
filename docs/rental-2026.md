@@ -32,7 +32,7 @@ Coordinates in metres, `x` east, `z` south, ceiling `H = 2.6`. Bounds live at th
   (1.19–1.50 m and 1.52–1.70 m); they do not stick out.
   Beige tiled splashback.
 - Fridge at z -1.43 to -0.88 (it opens; it's also a shot in the launch video).
-- Desk with two white chairs, offset from the table.
+- Desk along the window at counter height (0.9 m), from the west wall into the counter's oak corner, with an oak end panel and small shelf at the west end. Two white counter-height stools.
 - Glass partition between kitchen and bedroom side: two halves, the west half open.
 
 ## Bedroom
