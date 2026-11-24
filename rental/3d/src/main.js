@@ -11,7 +11,7 @@ import { toggleSound, updateSound } from './sound.js';
 import { setupPointer, updateTweens, tween, items, events } from './interact.js';
 import { makeDaylight } from './daylight.js';
 import { Tour, ROOMS } from './tour.js';
-import { Intro } from './intro.js';
+import { Intro, INTRO_END } from './intro.js';
 import { roomAt, ROOM_SHOTS } from './ui.js';
 import { cityView, landmark } from './view.js';
 
@@ -212,12 +212,15 @@ for (const d of document.querySelectorAll('dialog.sheet')) d.addEventListener('c
 
 // Welcome sheet: what this is and three choices. The model is nudged up so the sheet doesn't cover it.
 const welcome = $('welcome');
+const welcomeShift = (h) => Math.min(h * 0.5, innerHeight * 0.3);
 const showWelcome = () => {
   welcome.showModal();
-  const h = welcome.getBoundingClientRect().height;
-  camera.setViewOffset(innerWidth, innerHeight, 0, Math.min(h * 0.5, innerHeight * 0.3), innerWidth, innerHeight);
+  camera.setViewOffset(innerWidth, innerHeight, 0, welcomeShift(welcome.getBoundingClientRect().height), innerWidth, innerHeight);
 };
-welcome.addEventListener('close', () => camera.clearViewOffset());
+// The intro glides into that nudged-up spot over its last second, so the model doesn't jump when the sheet opens
+let introShift = 0;
+const measureWelcome = () => { welcome.style.visibility = 'hidden'; welcome.show(); const h = welcome.getBoundingClientRect().height; welcome.close(); welcome.style.visibility = ''; return welcomeShift(h); };
+welcome.addEventListener('close', () => { if (!intro) camera.clearViewOffset(); });
 welcome.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => { welcome.close(); track('welcome_choice', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[b.dataset.go] }); if (b.dataset.go !== mode) setMode(b.dataset.go); }));
 
 // Menu: light, sound, replay, share, help
@@ -234,6 +237,7 @@ const hash = new URLSearchParams(location.hash.slice(1).replace(/,/g, '&'));
 let deep = hash.has('walk') ? () => setMode('walk', WALK_SPOTS[ROOM_KEYS[hash.get('walk')]] || undefined)
   : hash.has('walkthrough') ? () => setMode('tour') : hash.has('above') ? () => {} : null;
 let intro = matchMedia('(prefers-reduced-motion: reduce)').matches || location.hash.includes('nointro') || deep ? null : new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
+if (intro && !location.hash.includes('nowelcome')) introShift = measureWelcome();
 // Prepare every material up front, including the lights and sky the intro reveals later, so nothing compiles mid-intro
 fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
 renderer.compile(scene, camera);
@@ -249,6 +253,7 @@ function replayIntro() {
   ['bottom', 'title', 'btn-more'].forEach((id) => show(id, false));
   fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
   intro = new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
+  camera.clearViewOffset(); introShift = measureWelcome();
   show('btn-skip', true); $('btn-skip').onclick = endIntro;
 }
 $('m-replay').onclick = () => { track('replay_intro'); replayIntro(); };
@@ -287,6 +292,7 @@ renderer.setAnimationLoop(() => {
     introDt = introDt * 0.8 + dt * 0.2;
     renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = (frame++ % 2) === 0;
     if (!intro.update(introDt)) endIntro();
+    else if (introShift) { const k = THREE.MathUtils.smootherstep(intro.t, INTRO_END - 1.4, INTRO_END - 0.35); camera.setViewOffset(w, h, 0, introShift * k, w, h); }
   }
   if (mode === 'orbit') orbit.update();
   if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }

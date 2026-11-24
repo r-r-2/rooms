@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 
 const END = 3.9, HOLD = 0.25, SWEEP = [0.05, 2.45]; // sweep start and end, seconds
+export const INTRO_END = END;
 const LIGHT_ORDER = ['living', 'kitchen', 'dressing', 'bedroom', 'corridor', 'toilet', 'shower'];
 const ORANGE = 0xff6a13;
 
