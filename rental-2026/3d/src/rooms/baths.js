@@ -43,7 +43,7 @@ export function corridor() {
 
   // Sliding frosted glass door between the corridor and the wash basin area
   const washGlass = new THREE.MeshStandardMaterial({ color: 0xf2f4f4, roughness: 0.9, transparent: true, opacity: 0.9, depthWrite: false }); // 90% opaque, same as the toilet door
-  slidingGlass(g, { axis: 'x', at: 2.42, from: -1.6, to: -0.55, height: 2.3, glass: washGlass });
+  slidingGlass(g, { axis: 'x', at: 2.42, from: -1.6, to: -0.55, height: 2.3, glass: washGlass, swap: true }); // the east panel slides
   box(g, [-1.6, 2.3, 2.37], [-0.55, H, 2.47], mat.wall);
 
   // Wash basin counter and mirror on the west wall (the shower faces it from the east)
@@ -63,7 +63,7 @@ export function toilet() {
   // West side: a full-width sliding frosted glass door opposite the wardrobe, wall only above it
   box(g, [T.x0 - 0.05, 2.3, T.z0], [T.x0 + 0.05, H, T.z1], mat.wall).userData.wall = 'z';
   const frosted = new THREE.MeshStandardMaterial({ color: 0xf2f4f4, roughness: 0.9, transparent: true, opacity: 0.9, depthWrite: false }); // 90% opaque
-  slidingGlass(g, { axis: 'z', at: T.x0, from: T.z0 + 0.05, to: T.z1, height: 2.3, glass: frosted }); // two panels, like the wash area door
+  slidingGlass(g, { axis: 'z', at: T.x0, from: T.z0 + 0.05, to: T.z1, height: 2.3, glass: frosted, swap: true }); // two panels; the south one slides
 
   // Toilet against the north wall, small hand basin beside it
   box(g, [-0.2, 0.4, T.z0 + 0.053], [0.2, 0.8, T.z0 + 0.22], mat.white);

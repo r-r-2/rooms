@@ -43,8 +43,8 @@ Coordinates in metres, `x` east, `z` south, ceiling `H = 2.6`. Bounds live at th
 ## Dressing and bath
 
 - Dressing table.
-- Toilet door: frosted glass, full width, two panels, about 90% opaque.
-- Wash area has a sliding door.
+- Toilet door: frosted glass, full width, two panels, about 90% opaque; the south panel slides.
+- Wash area has a sliding door: the east panel slides (west over the fixed one).
 - Toilet room basin on the north wall, with a full-width mirror above it.
 - **Beside the wash basin is a dark tiled wall, not wood** (`z 2.4 → 2.468`).
 - Shower: tiles below, glass above.

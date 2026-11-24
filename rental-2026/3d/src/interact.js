@@ -113,7 +113,7 @@ export function setupPointer(canvas, camera, isWalking, onAim, onEmptyTap) {
 // Two-panel sliding glass door in a wall. axis 'x' = the wall runs along x at z = at; 'z' = runs along z at x = at.
 // The panel at `from` slides behind the other one when tapped. frameColor for the slim aluminium frame.
 // single: one panel the full width, sliding along the wall face by `slide` metres (sign = direction).
-export function slidingGlass(parent, { axis, at, from, to, height = 2.3, glass, open = false, frameColor = 0x9a9fa4, single = false, slide = 0, face = -0.07 }) {
+export function slidingGlass(parent, { axis, at, from, to, height = 2.3, glass, open = false, frameColor = 0x9a9fa4, single = false, slide = 0, face = -0.07, swap = false }) {
   const frame = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.4, metalness: 0.6 });
   const half = (to - from) / 2, f = 0.035;
   const put = (grp, a, b, off, y0, y1, mat, collide) => {
@@ -132,6 +132,12 @@ export function slidingGlass(parent, { axis, at, from, to, height = 2.3, glass, 
   if (single) {
     panel(moving, from, to, face);                  // one panel on the wall face
     slider(moving, axis === 'x' ? 'x' : 'z', 0, slide, open, 'slide', true);
+    return moving;
+  }
+  if (swap) { // the panel at the 'to' end slides, back over the fixed one at the 'from' end
+    panel(parent, from, from + half, 0.035);
+    panel(moving, from + half, to, -0.035);
+    slider(moving, axis === 'x' ? 'x' : 'z', 0, -(half - 0.06), open, 'slide', true);
     return moving;
   }
   panel(parent, from + half, to, 0.035);           // fixed panel
