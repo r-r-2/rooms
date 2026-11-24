@@ -144,8 +144,64 @@ const onTourProgress = (f, r) => {
 const tour = new Tour(camera, nearDoors, onTourProgress, () => { track('walkthrough_complete'); setMode('orbit'); });
 $('btn-nextroom').onclick = () => { setPaused(false); tour.nextRoom(); };
 const show = (id, on) => ($(id).hidden = !on);
+
+// Camera flights between views: a short curved move instead of a cut. Going in, the camera spirals down and lands
+// at eye level; going out, it rises and pulls back. 1.3 s (0.9 s for a hop between rooms). Any tap or key skips it.
+const calmMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let flight = null, noFly = false; // noFly: deep links open their view straight away
+const lookPoint = () => (mode === 'orbit' && !flight ? orbit.target.clone() : camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(3).add(camera.position));
+const camState = (look) => ({ pos: camera.position.clone(), quat: camera.quaternion.clone(), fov: camera.fov, look });
+function fly(prepare, D = 1.3) {
+  if (calmMotion.matches) { prepare(); return; }
+  const from = camState(flight ? flight.lookNow : lookPoint());
+  prepare();
+  const to = camState(mode === 'orbit' ? orbit.target.clone() : lookPoint());
+  if (from.pos.distanceTo(to.pos) < 0.05) return;
+  camera.position.copy(from.pos); camera.quaternion.copy(from.quat); camera.fov = from.fov; camera.updateProjectionMatrix();
+  const inward = to.pos.y < from.pos.y; // landing in a room: spiral around where we land; leaving: around where we left
+  flight = { from, to, t: 0, D, inward, hop: from.pos.y < 2.6 && to.pos.y < 2.6, lookNow: from.look.clone() };
+}
+const endFlight = () => {
+  if (!flight) return;
+  const { to, vy0 } = flight; flight = null; if (vy0) camera.clearViewOffset();
+  camera.position.copy(to.pos); camera.quaternion.copy(to.quat); camera.fov = to.fov; camera.updateProjectionMatrix();
+  ceilings.forEach((o) => (o.visible = mode !== 'orbit')); backdrops.forEach((o) => (o.visible = mode !== 'orbit'));
+  if (mode === 'orbit') orbit.update();
+};
+const SWEEP = 0.7; // radians the camera circles while it flies in or out
+const _off = new THREE.Vector3();
+function stepFlight(dt) {
+  const f = flight; f.t = Math.min(1, f.t + dt / f.D);
+  const e = f.t < 0.5 ? 4 * f.t ** 3 : 1 - (-2 * f.t + 2) ** 3 / 2; // ease in and out
+  const { from, to } = f;
+  if (f.hop) { // between rooms: up over the walls, across, and down
+    camera.position.lerpVectors(from.pos, to.pos, e); camera.position.y += Math.sin(Math.PI * e) * 2.2;
+  } else if (f.inward) { // spiral down onto the landing spot
+    _off.subVectors(from.pos, to.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, SWEEP * e); _off.x *= 1 - e; _off.z *= 1 - e; _off.y *= (1 - e) ** 1.4;
+    camera.position.copy(to.pos).add(_off);
+  } else { // rise and pull back, unwinding the same curve
+    _off.subVectors(to.pos, from.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, -SWEEP * (1 - e)); _off.x *= e; _off.z *= e; _off.y *= e ** 0.7;
+    camera.position.copy(from.pos).add(_off);
+  }
+  f.lookNow.lerpVectors(from.look, to.look, e); camera.lookAt(f.lookNow);
+  camera.fov = from.fov + (to.fov - from.fov) * e; camera.updateProjectionMatrix();
+  if (f.vy0) camera.setViewOffset(innerWidth, innerHeight, 0, f.vy0 * (1 - e), innerWidth, innerHeight);
+  // inside the rooms: ceilings and the city once we're below the ceiling; the cutaway while we're above it
+  const inside = camera.position.y < 2.45;
+  ceilings.forEach((o) => (o.visible = inside)); backdrops.forEach((o) => (o.visible = inside));
+  if (f.t >= 1) { camera.quaternion.copy(to.quat); endFlight(); }
+}
+renderer.domElement.addEventListener('pointerdown', endFlight);
+addEventListener('keydown', endFlight);
+
 function setMode(m, pose) {
-  const prev = mode; mode = m;
+  const prev = mode;
+  if (flight) endFlight();
+  if (!noFly && ['orbit', 'walk', 'tour'].includes(prev) && ['orbit', 'walk', 'tour'].includes(m) && (prev !== m || pose)) { fly(() => setModeNow(m, pose, prev)); return; }
+  setModeNow(m, pose, prev);
+}
+function setModeNow(m, pose, prev) {
+  mode = m;
   if (m !== prev && m !== 'intro' && prev !== 'intro' && prev !== 'none') track('choose_view', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[m] });
   if (prev === 'tour' && m !== 'tour') tour.stop();
   ['btn-orbit', 'btn-walk', 'btn-day'].forEach((id) => $(id).setAttribute('aria-pressed', String({ orbit: 'btn-orbit', walk: 'btn-walk', tour: 'btn-day' }[m] === id)));
@@ -183,7 +239,7 @@ $('rooms').innerHTML = ROOMS.map(([name]) => `<button>${name}</button>`).join(''
   const name = b.textContent;
   track('room_open', { room: name, view: mode });
   if (mode === 'tour') { setPaused(false); tour.jump(ROOMS[k][1]); return; }
-  if (mode === 'walk') { walk.enable(WALK_SPOTS[name]); return; }
+  if (mode === 'walk') { fly(() => walk.enable(WALK_SPOTS[name]), 0.9); return; }
   const [x, z, d] = ROOM_SHOTS[name];
   tween(orbit.target, 'x', x, 1.1); tween(orbit.target, 'z', z, 1.1);
   tween(camera.position, 'x', x + d * 0.45, 1.1); tween(camera.position, 'y', d * 0.95, 1.1); tween(camera.position, 'z', z + d * 0.6, 1.1);
@@ -220,7 +276,7 @@ const showWelcome = () => {
 // The intro glides into that nudged-up spot over its last second, so the model doesn't jump when the sheet opens
 let introShift = 0;
 const measureWelcome = () => { welcome.style.visibility = 'hidden'; welcome.show(); const h = welcome.getBoundingClientRect().height; welcome.close(); welcome.style.visibility = ''; return welcomeShift(h); };
-welcome.addEventListener('close', () => { if (!intro) camera.clearViewOffset(); });
+welcome.addEventListener('close', () => { if (flight && camera.view?.enabled) flight.vy0 = camera.view.offsetY; else if (!intro) camera.clearViewOffset(); }); // a flight eases the nudge away
 welcome.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => { welcome.close(); track('welcome_choice', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[b.dataset.go] }); if (b.dataset.go !== mode) setMode(b.dataset.go); }));
 
 // Menu: light, sound, replay, share, help
@@ -242,14 +298,14 @@ if (intro && !location.hash.includes('nowelcome')) introShift = measureWelcome()
 fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
 renderer.compile(scene, camera);
 fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
-const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; go(); } else if (!location.hash.includes('nowelcome')) showWelcome(); };
+const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; noFly = true; go(); noFly = false; } else if (!location.hash.includes('nowelcome')) showWelcome(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 
 // Replay the intro from the welcome card: back to an empty site, then build it again
 function replayIntro() {
   menu.close(); welcome.close();
   if (mode !== 'orbit') setMode('orbit');
-  mode = 'intro'; orbit.enabled = false;
+  endFlight(); mode = 'intro'; orbit.enabled = false;
   ['bottom', 'title', 'btn-more'].forEach((id) => show(id, false));
   fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
   intro = new Intro(home, camera, centre, dollhousePose, roomLights, fixtures);
@@ -294,16 +350,19 @@ renderer.setAnimationLoop(() => {
     if (!intro.update(introDt)) endIntro();
     else if (introShift) { const k = THREE.MathUtils.smootherstep(intro.t, INTRO_END - 1.4, INTRO_END - 0.35); camera.setViewOffset(w, h, 0, introShift * k, w, h); }
   }
-  if (mode === 'orbit') orbit.update();
-  if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }
-  if (mode === 'tour') tour.update(dt);
+  if (flight) stepFlight(dt);
+  else {
+    if (mode === 'orbit') orbit.update();
+    if (mode === 'walk') { walk.update(dt); pointer.centreGlow(); }
+    if (mode === 'tour') tour.update(dt);
+  }
   if (city.visible) city.update(dt);
   if (mode === 'walk' || mode === 'tour') {
     const r = roomAt(camera.position.x, camera.position.z);
     if (r && r !== shownRoom) { $('roompill').textContent = shownRoom = r; }
   }
   updateSound(camera.position, mode === 'walk' || mode === 'tour');
-  cutaway(mode === 'orbit' || mode === 'intro');
+  cutaway(mode === 'orbit' || mode === 'intro' || (flight && camera.position.y > 2.45));
   calm();
   renderer.render(scene, camera);
 });
