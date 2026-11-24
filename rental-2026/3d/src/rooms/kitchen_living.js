@@ -12,7 +12,7 @@ export function kitchen() {
   floor(g, W, N, E, SPLIT, mat.tile(E - W, SPLIT - N), mat.ceiling);
   wall(g, 'x', N - 0.05, W - 0.05, E + 0.05, mat.wall, [[1.3, 3.4, 0.02, 2.3]]); // window down to the floor
   wall(g, 'z', W, N, -2.76, mat.wall);
-  wall(g, 'z', E + 0.05, N, SPLIT, mat.wall);
+  wall(g, 'z', E + 0.05, N, SPLIT, mat.wall, [[-2.42, -1.52, 1.19, 1.5], [-2.32, -1.52, 1.52, 1.7]]); // niches above the tap
   box(g, [1.3, 0.02, N - 0.06], [3.4, 2.3, N - 0.04], mat.glass, { shadow: false });
   const bl = blinds(1.3, 3.4, 0.03, 2.27, N + 0.05); // full height, like the window
   g.add(bl);
@@ -43,7 +43,8 @@ export function kitchen() {
   box(g, [cx - 0.02, 0.86, K0], [E, 0.9, K1], mat.oak);                              // oak corner top
   box(g, [cx - 0.02, 0.86, K1], [E, 0.9, K2], whiteTop);                             // white counter
   box(g, [E - 0.05, 0.9, K1], [E, 0.98, K2], whiteTop);                              // raised back lip
-  box(g, [E - 0.01, 0.98, K1], [E, 1.5, K2], splash, { shadow: false });            // tiled splashback
+  box(g, [E - 0.01, 0.98, K1], [E, 1.17, K2], splash, { shadow: false });           // tiled splashback, up to the niches
+  box(g, [E - 0.01, 1.17, K1], [E, 1.5, -2.44], splash, { shadow: false });
   box(g, [3.11, 0.9, -2.76], [3.6, 0.912, -2.46], blackGlass);                       // induction hob
   box(g, [3.14, 0.9, -2.28], [3.55, 0.906, -1.87], mat.steel);                       // sink rim
   box(g, [3.19, 0.901, -2.23], [3.5, 0.907, -1.92], mat.dark);                       // sink bowl (reads as depth)
@@ -63,9 +64,13 @@ export function kitchen() {
   box(g, [E - 0.35, 1.79, -1.49], [E, 2.11, -0.78], cream);
   box(g, [E - 0.35, 2.13, -2.33], [E, 2.56, -0.66], cream);
   box(g, [E - 0.355, 2.11, -2.33], [E, 2.13, -0.66], mat.dark);                      // shadow gap between the rows
-  // Open shelf under the cabinet above the sink
-  box(g, [E - 0.25, 1.2, -2.41], [E, 1.22, K2], cream);
-  box(g, [E - 0.25, 1.48, -2.33], [E, 1.7, K2], cream);
+  // Two open niches set into the wall above the tap (from the scan, about 25 cm deep)
+  for (const [z0, z1, y0, y1] of [[-2.42, -1.52, 1.19, 1.5], [-2.32, -1.52, 1.52, 1.7]]) {
+    box(g, [E + 0.24, y0, z0], [E + 0.26, y1, z1], splash, { shadow: false });            // back
+    box(g, [E, y0 - 0.02, z0], [E + 0.26, y0, z1], splash);                               // shelf (bottom)
+    box(g, [E, y1, z0], [E + 0.26, y1 + 0.02, z1], splash);                               // top
+    for (const z of [z0 - 0.02, z1]) box(g, [E, y0, z], [E + 0.26, y1, z + 0.02], splash); // sides
+  }
   // Fridge: freezer on top, door gap, two handles, kick plate (front faces west)
   const fridge = new THREE.MeshStandardMaterial({ color: 0xdfe2e4, roughness: 0.25, metalness: 0.55 });
   box(g, [cx + 0.07, 0.06, -1.43], [E, 1.75, -0.88], fridge, { collide: true });
