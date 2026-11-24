@@ -123,4 +123,23 @@ export function updateSound(pos, walking) {
     const target = walking ? (name === here ? 1 : 0.12) : 0.35;
     bus.gain.setTargetAtTime(target, ctx.currentTime, 0.6);
   }
+  footsteps(pos, walking, here === 'kitchen' || here === 'bath');
+}
+
+// Footsteps, kept quiet: a soft heel thump every ~65 cm of walking, with a light tap on top that is
+// warmer on the wooden floors and crisper on the kitchen and bathroom tiles. Left and right differ a little.
+let last = null, stride = 0, foot = 0;
+function footsteps(pos, walking, tiles) {
+  if (!walking) { last = null; stride = 0; return; }
+  if (last) {
+    const d = Math.hypot(pos.x - last.x, pos.z - last.z);
+    if (d > 0.5) stride = 0;            // a jump to another room, not a step
+    else stride += d;
+  }
+  last = { x: pos.x, z: pos.z };
+  if (stride < 0.65) return;
+  stride = 0; foot ^= 1;
+  const v = (foot ? 1 : 0.92) * (0.9 + Math.random() * 0.2);
+  burst((tiles ? 210 : 160) * v, 'lowpass', 0.09, 0.05);                 // heel
+  burst((tiles ? 2600 : 950) * v, 'bandpass', tiles ? 0.035 : 0.05, tiles ? 0.016 : 0.01, tiles ? 3 : 2); // contact
 }
