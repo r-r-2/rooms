@@ -94,7 +94,7 @@ const onAim = (item) => {
   aimed = item; $('aim').classList.toggle('on', !!item); show('btn-use', !!item);
   if (item) $('btn-use').textContent = item.action;
 };
-const pointer = setupPointer(renderer.domElement, camera, () => mode === 'walk' || mode === 'tour', onAim, () => { if (mode === 'tour') togglePause(); });
+const pointer = setupPointer(renderer.domElement, camera, () => mode === 'walk' || mode === 'tour', onAim, () => { if (mode === 'tour' && performance.now() - skipTap > 600) togglePause(); });
 const setHour = makeDaylight({ scene, renderer, sun, hemi, ambient, centre });
 // Dollhouse camera: further back on a tall phone screen so the whole flat fits
 const dollhousePose = new THREE.Vector3();
@@ -177,21 +177,22 @@ function stepFlight(dt) {
   if (f.hop) { // between rooms: up over the walls, across, and down
     camera.position.lerpVectors(from.pos, to.pos, e); camera.position.y += Math.sin(Math.PI * e) * 2.2;
   } else if (f.inward) { // spiral down onto the landing spot
-    _off.subVectors(from.pos, to.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, SWEEP * e); _off.x *= 1 - e; _off.z *= 1 - e; _off.y *= (1 - e) ** 1.4;
+    _off.subVectors(from.pos, to.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, SWEEP * e); const hz = (1 - e) ** 1.6; _off.x *= hz; _off.z *= hz; _off.y *= (1 - e) ** 0.7; // over the spot first, then down
     camera.position.copy(to.pos).add(_off);
   } else { // rise and pull back, unwinding the same curve
-    _off.subVectors(to.pos, from.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, -SWEEP * (1 - e)); _off.x *= e; _off.z *= e; _off.y *= e ** 0.7;
+    _off.subVectors(to.pos, from.pos).applyAxisAngle(THREE.Object3D.DEFAULT_UP, -SWEEP * (1 - e)); const hz = e ** 1.6; _off.x *= hz; _off.z *= hz; _off.y *= e ** 0.7; // up through the ceiling first, then out
     camera.position.copy(from.pos).add(_off);
   }
   f.lookNow.lerpVectors(from.look, to.look, e); camera.lookAt(f.lookNow);
   camera.fov = from.fov + (to.fov - from.fov) * e; camera.updateProjectionMatrix();
   if (f.vy0) camera.setViewOffset(innerWidth, innerHeight, 0, f.vy0 * (1 - e), innerWidth, innerHeight);
   // inside the rooms: ceilings and the city once we're below the ceiling; the cutaway while we're above it
-  const inside = camera.position.y < 2.45;
+  const inside = camera.position.y < 2.58; // swap exactly at the ceiling, so you never see through it
   ceilings.forEach((o) => (o.visible = inside)); backdrops.forEach((o) => (o.visible = inside));
   if (f.t >= 1) { camera.quaternion.copy(to.quat); endFlight(); }
 }
-renderer.domElement.addEventListener('pointerdown', endFlight);
+let skipTap = 0; // a tap that skips a camera move doesn't also pause the walkthrough
+renderer.domElement.addEventListener('pointerdown', () => { if (flight || tour.ff) skipTap = performance.now(); endFlight(); if (tour.ff) tour.finishJump(); });
 addEventListener('keydown', endFlight);
 
 function setMode(m, pose) {
@@ -362,7 +363,7 @@ renderer.setAnimationLoop(() => {
     if (r && r !== shownRoom) { $('roompill').textContent = shownRoom = r; }
   }
   updateSound(camera.position, mode === 'walk' || mode === 'tour');
-  cutaway(mode === 'orbit' || mode === 'intro' || (flight && camera.position.y > 2.45));
+  cutaway(mode === 'orbit' || mode === 'intro' || (flight && camera.position.y >= 2.58));
   calm();
   renderer.render(scene, camera);
 });

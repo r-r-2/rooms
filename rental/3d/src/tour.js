@@ -43,26 +43,49 @@ export class Tour {
   }
 
   start() {
-    Object.assign(this, { active: true, paused: false, s: 0, v: 0, si: 0, look: 0, lookT: 0, bob: 0, elapsed: 0, prevLook: null });
+    Object.assign(this, { active: true, paused: false, ff: null, s: 0, v: 0, si: 0, look: 0, lookT: 0, bob: 0, elapsed: 0, prevLook: null });
     this.lookAt = new THREE.Vector3(); this.tmp = new THREE.Vector3();
     tvControl.set?.(true);
     this.place(0, this.target(0), 1);
   }
 
-  // Skip straight to a room: open every door on the way, then stand at its first stop
+  // Skip to a room: fast-forward along the path at eye level (1–1.5 s), doors opening ahead, turning to the room's first look
   jump(si) {
     if (!this.active || si >= this.stops.length) return;
+    if (this.ff) this.finishJump();
     const to = this.at[this.stops[si]];
     for (let d = Math.min(this.s, to); d <= Math.max(this.s, to); d += 0.25) { const p = this.curve.getPointAt(Math.min(1, d / this.len)); this.nearDoors(p.x, p.z); }
-    Object.assign(this, { s: to, v: 0, si, look: 0, lookT: 0 });
-    this.elapsed = Math.max(this.elapsed, (to / this.len) * this.total * 0.6);
+    const dist = Math.abs(to - this.s);
+    if (still || dist < 0.05) { this.ff = { s0: to, s1: to, si, t: 1, D: 1 }; this.finishJump(); return; }
+    this.ff = { s0: this.s, s1: to, si, t: 0, D: Math.min(1.5, Math.max(1.0, 0.8 + dist * 0.06)), dir: this.camera.getWorldDirection(new THREE.Vector3()), end: new THREE.Vector3(...PATH[this.stops[si]].looks[0].slice(0, 3)) };
+  }
+  stepJump(dt) {
+    const f = this.ff; f.t = Math.min(1, f.t + dt / f.D);
+    const e = f.t < 0.5 ? 4 * f.t ** 3 : 1 - (-2 * f.t + 2) ** 3 / 2; // ease in and out
+    const s = f.s0 + (f.s1 - f.s0) * e, dir = Math.sign(f.s1 - f.s0) || 1;
+    const p = this.curve.getPointAt(THREE.MathUtils.clamp(s / this.len, 0, 1));
+    // look along the way we're going (3 m ahead), and turn smoothly: at speed the path's corners would whip the view.
+    // Over the last stretch, settle on the room's first look.
+    const ahead = this.curve.getPointAt(THREE.MathUtils.clamp((s + dir * 3) / this.len, 0, 1)).setY(1.45);
+    const want = ahead.lerp(f.end, smooth(THREE.MathUtils.clamp((f.t - 0.55) / 0.45, 0, 1)));
+    this.camera.position.set(p.x, EYE, p.z);
+    want.sub(this.camera.position).normalize();
+    const k = Math.max(1 - Math.exp(-dt * 4), smooth(THREE.MathUtils.clamp((f.t - 0.8) / 0.2, 0, 1)));
+    f.dir.lerp(want, k).normalize();
+    this.lookAt.copy(this.camera.position).addScaledVector(f.dir, 3); this.camera.lookAt(this.lookAt);
+    if (f.t >= 1) this.finishJump();
+  }
+  finishJump() {
+    const { s1, si } = this.ff; this.ff = null;
+    Object.assign(this, { s: s1, v: 0, si, look: 0, lookT: 0 });
+    this.elapsed = Math.max(this.elapsed, (s1 / this.len) * this.total * 0.6);
     this.place(this.s, this.tmp.set(...PATH[this.stops[si]].looks[0].slice(0, 3)), 1);
     this.onProgress(this.elapsed / this.total, this.room());
   }
   room() { let r = 0; for (const [i, [, si]] of ROOMS.entries()) if (this.si >= si) r = i; return r; }
   nextRoom() { const r = this.room() + 1; if (r < ROOMS.length) this.jump(ROOMS[r][1]); else this.onEnd(); }
 
-  stop() { if (this.active) tvControl.set?.(false); this.active = false; }
+  stop() { if (this.active) tvControl.set?.(false); this.active = false; this.ff = null; }
 
   // Where to look at distance s: the current stop's first look when close to it, else a point ahead on the path.
   target(s) {
@@ -84,7 +107,9 @@ export class Tour {
   }
 
   update(dt) {
-    if (!this.active || this.paused) return;
+    if (!this.active) return;
+    if (this.ff) { this.stepJump(dt); return; }
+    if (this.paused) return;
     this.elapsed += dt;
     const i = this.stops[this.si];
     const stopAt = i === undefined ? this.len : this.at[i];
