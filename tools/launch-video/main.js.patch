@@ -1,5 +1,5 @@
---- ../../rooms/rental-2026/3d/src/main.js	2026-11-22 20:12:33.465456387 +0700
-+++ rental-2026/3d/src/main.js	2026-11-22 23:34:54.983583369 +0700
+--- ../../rooms/rental/3d/src/main.js
++++ rental/3d/src/main.js
 @@ -250,7 +250,7 @@
      if (!intro.update(introDt)) endIntro();
    }

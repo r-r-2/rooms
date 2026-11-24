@@ -23,8 +23,8 @@ Plain static site. No build step, no framework, no bundler. Deployed by Cloudfla
 
 ## Privacy (hard rules)
 
-- Never publish where a place is: no address, building or condo name, area, street, floor, city, or exact dates. A place is labelled only by type and year, e.g. "Short-term rental, 2026". A `city` field exists in `places.json` but stays `null` unless Rahul asks.
-- Exception, Rahul's call (Nov 2026): the rental-2026 view outside the windows is built from real map data (OpenStreetMap, Overture), so the building can be found from it. Still never name it, the area, the bank, the train line or the floor in text, comments, UI or commit messages; the tower is "the tall building" and the train "the skytrain". Keep the map credit in the menu (ODbL).
+- Never publish where a place is: no address, building or condo name, area, street, floor, city, or exact dates. A place is labelled only by its type, e.g. "Short-term rental", with no year (Rahul's call). `year` in `places.json` is only for sorting. A `city` field exists in `places.json` but stays `null` unless Rahul asks.
+- Exception, Rahul's call (Nov 2026): the rental view outside the windows is built from real map data (OpenStreetMap, Overture), so the building can be found from it. Still never name it, the area, the bank, the train line or the floor in text, comments, UI or commit messages; the tower is "the tall building" and the train "the skytrain". Keep the map credit in the menu (ODbL).
 - Never commit raw scans (`.glb`, `.ply`, `.usdz`, scan photos or video). They contain real photos, including people. `.gitignore` blocks the common formats.
 - Wall art, prints and screens are drawn in code. No family photos, nameplates or recognisable people.
 - Link previews (`og:image`) use an eye-level still, never the layout from above: the layout is meant to be a surprise.
@@ -94,7 +94,7 @@ Headless Chrome with SwiftShader works for smoke tests and screenshots (slow, ab
 2. Render stills into `<slug>/stills/`: `teaser.jpg` (eye level, no layout), `og.jpg` (1200x630 crop of it), `above.jpg`, one per room.
 3. Add the entry to `places.json`, run `node scripts/build.mjs`, add the page to `sitemap.xml`.
 4. Write `docs/<slug>.md` as Rahul confirms details.
-5. Slugs are type and year: `rental-2026`, `airbnb-2027`, `hotel-2027-2`.
+5. Slugs are the type, numbered if repeated: `rental`, `airbnb`, `hotel-2`. No year.
 
 ## Analytics
 

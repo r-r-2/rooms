@@ -18,7 +18,7 @@ await p.evaluateOnNewDocument(() => {
   window.requestAnimationFrame = (cb) => { q.push(cb); return q.length; };
   window.__step = (ms) => { t += ms; const cbs = q.splice(0); for (const cb of cbs) cb(t); };
 });
-await p.goto('http://localhost:8780/rental-2026/3d/index.html' + (scene === 'A' ? '#nowelcome' : '#nointro,nowelcome'), { waitUntil: 'load' });
+await p.goto('http://localhost:8780/rental/3d/index.html' + (scene === 'A' ? '#nowelcome' : '#nointro,nowelcome'), { waitUntil: 'load' });
 await p.waitForFunction(() => window.__app, { timeout: 120000 });
 await p.addStyleTag({ content: '.top,.bottom,.tourbar,.pad,.aim,.use,.hint,#btn-skip,dialog{display:none!important}' });
 const step = (n = 1) => p.evaluate((n) => { for (let i = 0; i < n; i++) window.__step(1000 / 30); }, n);

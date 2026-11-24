@@ -3,45 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Short-term rental, 2026 · Rooms I've lived in</title>
-<meta name="description" content="A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
-<link rel="canonical" href="https://rooms.rr2.dev/rental-2026/">
+<title>Short-term rental · Rooms I've lived in</title>
+<meta name="description" content="A place I rented, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
+<link rel="canonical" href="https://rooms.rr2.dev/rental/">
 <!-- link previews: 1200x630 card image (an eye-level still, so the layout stays a surprise) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rooms I've lived in">
-<meta property="og:url" content="https://rooms.rr2.dev/rental-2026/">
-<meta property="og:title" content="Short-term rental, 2026 · Rooms I've lived in">
-<meta property="og:description" content="A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
-<meta property="og:image" content="https://rooms.rr2.dev/rental-2026/stills/og.jpg">
+<meta property="og:url" content="https://rooms.rr2.dev/rental/">
+<meta property="og:title" content="Short-term rental · Rooms I've lived in">
+<meta property="og:description" content="A place I rented, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
+<meta property="og:image" content="https://rooms.rr2.dev/rental/stills/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A living room seen through to a kitchen, rebuilt in 3D">
-<meta property="og:video" content="https://rooms.rr2.dev/rental-2026/media/launch.mp4">
-<meta property="og:video:secure_url" content="https://rooms.rr2.dev/rental-2026/media/launch.mp4">
+<meta property="og:video" content="https://rooms.rr2.dev/rental/media/launch.mp4">
+<meta property="og:video:secure_url" content="https://rooms.rr2.dev/rental/media/launch.mp4">
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Short-term rental, 2026 · Rooms I've lived in">
-<meta name="twitter:description" content="A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
-<meta name="twitter:image" content="https://rooms.rr2.dev/rental-2026/stills/og.jpg">
+<meta name="twitter:title" content="Short-term rental · Rooms I've lived in">
+<meta name="twitter:description" content="A place I rented, rebuilt in 3D from an iPhone LiDAR scan I took before moving out.">
+<meta name="twitter:image" content="https://rooms.rr2.dev/rental/stills/og.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../style.css">
 <script src="../analytics.js"></script>
 </head>
 <body>
-<script>/* old-style room links (/rental-2026/#kitchen) open the 3D in that room */
+<script>/* old-style room links (/rental/#kitchen) open the 3D in that room */
 const k = location.hash.slice(1); if (["living","kitchen","bedroom","dressing","bathroom"].includes(k)) location.replace('3d/index.html#walk=' + k);</script>
 <main class="page">
   <a class="crumb" href="../index.html">Rooms I've lived in</a>
-  <h1>Short-term rental, 2026</h1>
-  <p class="lede">A place I rented in 2026, rebuilt in 3D from an iPhone LiDAR scan I took before moving out. Doors, lights, curtains and the TV all work.</p>
+  <h1>Short-term rental</h1>
+  <p class="lede">A place I rented, rebuilt in 3D from an iPhone LiDAR scan I took before moving out. Doors, lights, curtains and the TV all work.</p>
   <a class="hero" href="3d/index.html#above"><img src="stills/above.jpg" alt="The whole place from above, walls cut away" width="1600" height="1000"></a>
   <div class="actions">
     <a class="btn dark" href="3d/index.html#above">Look around from above</a>
     <a class="btn" href="3d/index.html#walkthrough">Take the walkthrough</a>
-    <button class="btn share" id="share" data-url="https://rooms.rr2.dev/rental-2026/" data-title="Short-term rental, 2026">Share</button>
+    <button class="btn share" id="share" data-url="https://rooms.rr2.dev/rental/" data-title="Short-term rental">Share</button>
   </div>
   <p class="copied" id="copied" role="status" aria-live="polite"></p>
   <h2>Rooms</h2>
@@ -60,7 +60,7 @@ const k = location.hash.slice(1); if (["living","kitchen","bedroom","dressing","
 const b = document.getElementById('share'), out = document.getElementById('copied');
 b.onclick = async () => {
   const { url, title } = b.dataset;
-  track('share', { place: 'rental-2026', from: 'place_page' });
+  track('share', { place: 'rental', from: 'place_page' });
   if (navigator.share) { try { await navigator.share({ title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); out.textContent = 'Link copied'; } catch { out.textContent = url; }
   setTimeout(() => (out.textContent = ''), 2500);

@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const root = new URL('..', import.meta.url).pathname, SITE = 'https://rooms.rr2.dev';
 const places = JSON.parse(readFileSync(root + 'places.json', 'utf8')).sort((a, b) => b.year - a.year);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-const title = (p) => `${p.type}, ${p.year}`;
+const title = (p) => p.type; // no year: Rahul's call (year stays in places.json only to sort)
 const head = (t, desc, img, path) => `<!doctype html>
 <html lang="en">
 <head>

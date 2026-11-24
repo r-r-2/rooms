@@ -1,4 +1,4 @@
-# Short-term rental, 2026
+# Short-term rental
 
 What the real place looks like, as Rahul confirmed it against his scan. When the model and this file disagree, this file wins. Don't "fix" any of these back.
 

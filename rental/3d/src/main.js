@@ -254,8 +254,8 @@ function replayIntro() {
 $('m-replay').onclick = () => { track('replay_intro'); replayIntro(); };
 // Share the whole place (not a room): share sheet on phones, otherwise copy the link
 $('m-share').onclick = async () => {
-  const url = 'https://rooms.rr2.dev/rental-2026/', b = $('m-share');
-  track('share', { place: 'rental-2026', from: 'viewer' });
+  const url = 'https://rooms.rr2.dev/rental/', b = $('m-share');
+  track('share', { place: 'rental', from: 'viewer' });
   if (navigator.share) { try { await navigator.share({ title: document.title, url }); } catch {} return; }
   try { await navigator.clipboard.writeText(url); b.textContent = 'Link copied'; } catch { b.textContent = url; }
   setTimeout(() => (b.textContent = 'Share this place'), 2500);

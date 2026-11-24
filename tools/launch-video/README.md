@@ -1,6 +1,6 @@
 # Launch video
 
-How the 24.6 s launch video for `rental-2026` was made (1920x1080, 30 fps). The final file lives in the notes repo at `worklog/rooms-ive-lived-in/rooms-launch.mp4`; a small copy is at `rental-2026/media/launch.mp4` for `og:video`.
+How the 24.6 s launch video for `rental` was made (1920x1080, 30 fps). The final file lives in the notes repo at `worklog/rooms-ive-lived-in/rooms-launch.mp4`; a small copy is at `rental/media/launch.mp4` for `og:video`.
 
 Nothing heavy is committed here: no frames, clips, renders or music.
 
@@ -10,7 +10,7 @@ Nothing heavy is committed here: no frames, clips, renders or music.
 
 ## Steps
 
-1. **Serve a patched copy of the site.** Copy the repo to `site/`, apply `main.js.patch` to `site/rental-2026/3d/src/main.js` (it adds `window.__noGlow` and exposes `orbit` on `window.__app`), then serve it:
+1. **Serve a patched copy of the site.** Copy the repo to `site/`, apply `main.js.patch` to `site/rental/3d/src/main.js` (it adds `window.__noGlow` and exposes `orbit` on `window.__app`), then serve it:
    ```sh
    cd site && python3 -m http.server 8780
    ```
