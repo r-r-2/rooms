@@ -58,14 +58,18 @@ export function kitchen() {
   for (const y of [1.3, 1.67, 1.88, 2.1]) box(g, [sh0, y, sz0], [E, y + 0.02, sz1], mat.white);
   box(g, [sh0 + 0.04, 1.32, -3.5], [E - 0.02, 1.62, -2.99], mat.steel);              // microwave
   box(g, [sh0 + 0.035, 1.36, -3.42], [sh0 + 0.04, 1.58, -3.12], mat.dark);           //   its window
-  // Electric kettle on the desk corner by the microwave (light blue, from the scan)
-  const kettleBlue = new THREE.MeshStandardMaterial({ color: 0xa8d4e4, roughness: 0.35 });
-  const kx = 3.35, kz = -3.3, ky = 1.01;
-  const kBase = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.09, 0.02, 24), mat.dark); kBase.position.set(kx, ky + 0.01, kz); g.add(kBase);
-  const kBody = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.2, 24), kettleBlue); kBody.position.set(kx, ky + 0.12, kz); kBody.castShadow = true; g.add(kBody);
-  const kLid = new THREE.Mesh(new THREE.SphereGeometry(0.066, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), kettleBlue); kLid.scale.y = 0.35; kLid.position.set(kx, ky + 0.22, kz); g.add(kLid);
-  const kHandle = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.014, 8, 20, Math.PI), kettleBlue); kHandle.rotation.set(0, 0, -Math.PI / 2); kHandle.position.set(kx + 0.075, ky + 0.13, kz); g.add(kHandle);
-  const kSpout = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.06, 12), kettleBlue); kSpout.rotation.z = Math.PI / 2 + 0.6; kSpout.position.set(kx - 0.085, ky + 0.19, kz); g.add(kSpout);
+  // Electric kettle on the desk corner by the microwave (from the scan): a rounded light blue body on a dark base,
+  // handle at the back, standing on a small dark mat
+  const kettleBlue = new THREE.MeshStandardMaterial({ color: 0xa9d3e3, roughness: 0.3 });
+  const kx = 3.22, kz = -3.38, ky = 1.01;
+  box(g, [kx - 0.1, ky, kz - 0.1], [kx + 0.1, ky + 0.004, kz + 0.1], mat.dark, { shadow: false });            // mat
+  const prof = [[0, 0], [0.086, 0], [0.092, 0.035], [0.091, 0.09], [0.085, 0.14], [0.074, 0.175], [0.06, 0.188], [0.02, 0.192], [0, 0.192]].map(([r, y]) => new THREE.Vector2(r, y));
+  const kBody = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), kettleBlue); kBody.position.set(kx, ky + 0.02, kz); kBody.castShadow = true; g.add(kBody);
+  const kBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.082, 0.018, 32), mat.dark); kBase.position.set(kx, ky + 0.013, kz); g.add(kBase);
+  const kHandle = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.014, 8, 20, Math.PI), kettleBlue);   // handle on the south side
+  kHandle.rotation.set(0, -Math.PI / 2, -Math.PI / 2); kHandle.position.set(kx, ky + 0.12, kz + 0.075); g.add(kHandle);
+  const kLid = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.02, 16), kettleBlue); kLid.position.set(kx, ky + 0.22, kz); g.add(kLid); // lid knob
+  const kSpout = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.05, 12), kettleBlue); kSpout.rotation.x = -(Math.PI / 2 + 0.7); kSpout.position.set(kx, ky + 0.17, kz - 0.09); g.add(kSpout); // spout to the north
   // Black glass hood unit over the hob
   box(g, [E - 0.38, 1.5, -2.91], [E, 2.56, -2.33], blackGlass);
   box(g, [E - 0.4, 1.48, -2.91], [E, 1.51, -2.33], mat.steel);
