@@ -12,16 +12,17 @@ export const PATH = [
   { x: 1.85, z: 3.1, looks: [[3.1, 0.9, 1.0, 2.6], [1.15, 1.25, 0.9, 2.6]] },   // inside the front door: sofa, then the TV
   { x: 1.76, z: 1.2 },
   { x: 1.7, z: -0.6 },                                                         // through the open glass partition
-  { x: 2.2, z: -1.75, looks: [[2.0, 0.9, -3.69, 2.6], [3.4, 1.1, -1.4, 2.2]] }, // kitchen: desk at the window, then the counter and fridge
+  { x: 1.6, z: -0.9, looks: [[2.0, 0.9, -3.69, 2.6], [3.4, 1.1, -1.4, 2.2]] }, // kitchen: desk at the window, then the counter and fridge
   { x: 1.6, z: -0.45 },
   { x: 1.4, z: -0.05 },
   { x: 0.95, z: -0.05 },                                                       // bedroom door
-  { x: 0.25, z: -0.85, looks: [[-2.0, 1.15, -1.2, 2.6], [-1.1, 1.3, -2.76, 2.4]] }, // bedroom: bed and prints, then the balcony
-  { x: 0.3, z: 0.3, looks: [[0.28, 1.25, 0.95, 2.2]] },                        // dressing table
+  { x: 0.65, z: -0.3, looks: [[-2.0, 1.15, -1.2, 2.6], [-1.1, 1.3, -2.76, 2.4]] }, // bedroom: bed and prints, then the balcony
+  { x: 0.3, z: -0.2, looks: [[0.28, 1.25, 0.95, 2.2]] },                        // dressing table
+  { x: 0.1, z: 0.22 },                                                         // past the dressing stool
   { x: -0.75, z: 0.55 },
-  { x: -1.05, z: 1.55, looks: [[0.2, 1.05, 1.65, 1.8]] },                      // glance into the toilet as its door slides open
-  { x: -1.3, z: 2.2 },
-  { x: -1.3, z: 2.95, looks: [[-2.13, 1.35, 2.97, 2.0], [0.1, 1.25, 3.0, 3.2]] }, // wash basin, then the shower
+  { x: -1.25, z: 1.5, looks: [[0.2, 1.05, 1.65, 1.8]] },                      // glance into the toilet as its door slides open
+  { x: -0.82, z: 2.2 },                                                        // lined up with the wash-area doorway
+  { x: -0.95, z: 2.75, looks: [[-2.13, 1.35, 2.97, 2.0], [0.1, 1.25, 3.0, 3.2]] }, // wash basin, then the shower
 ];
 
 // The rooms the walk is split into, for the room buttons: which stop (index into the standing points) starts each
@@ -33,6 +34,7 @@ export class Tour {
   // nearDoors(x, z): opens any closed door close to this spot. onProgress(fraction, room?) for the UI.
   constructor(camera, nearDoors, onProgress, onEnd) {
     Object.assign(this, { camera, nearDoors, onProgress, onEnd, active: false, paused: false });
+    this.path = PATH;
     this.curve = new THREE.CatmullRomCurve3(PATH.map((p) => new THREE.Vector3(p.x, 0, p.z)), false, 'centripetal');
     this.len = this.curve.getLength();
     // Where each path point sits along the curve, in metres

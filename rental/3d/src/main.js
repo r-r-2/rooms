@@ -201,6 +201,8 @@ function setMode(m, pose) {
   if (!noFly && ['orbit', 'walk', 'tour'].includes(prev) && ['orbit', 'walk', 'tour'].includes(m) && (prev !== m || pose)) { fly(() => setModeNow(m, pose, prev)); return; }
   setModeNow(m, pose, prev);
 }
+// The walkthrough uses a wider lens so you see the whole room: 90° on a tall phone, 75° on a wide screen
+const tourFov = () => (innerWidth < innerHeight ? 90 : 75);
 function setModeNow(m, pose, prev) {
   mode = m;
   if (m !== prev && m !== 'intro' && prev !== 'intro' && prev !== 'none') track('choose_view', { view: { orbit: 'above', tour: 'walkthrough', walk: 'walk' }[m] });
@@ -216,7 +218,7 @@ function setModeNow(m, pose, prev) {
   backdrops.forEach((o) => (o.visible = m !== 'orbit'));
   orbit.enabled = m === 'orbit';
   if (m !== 'walk') walk.disable();
-  camera.fov = m === 'orbit' ? 45 : 70; camera.updateProjectionMatrix();
+  camera.fov = m === 'orbit' ? 45 : m === 'tour' ? tourFov() : 70; camera.updateProjectionMatrix();
   if (m === 'orbit') {
     if (prev !== 'intro') camera.position.copy(dollhousePose);
     orbit.target.copy(centre); orbit.update();
@@ -341,7 +343,7 @@ let introDt = 1 / 60, frame = 0;
 let shownRoom = '';
 renderer.setAnimationLoop(() => {
   const w = innerWidth, h = innerHeight;
-  if (renderer.domElement.width !== Math.floor(w * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  if (renderer.domElement.width !== Math.floor(w * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; if (mode === 'tour' && !flight) camera.fov = tourFov(); camera.updateProjectionMatrix(); }
   const dt = Math.min(clock.getDelta(), 0.05);
   updateTweens(dt);
   if (intro) {
