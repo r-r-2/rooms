@@ -40,6 +40,7 @@ const backdrops = []; home.traverse((o) => { if (o.userData.backdrop) backdrops.
 backdrops.forEach((o) => scene.attach(o)); // sky planes outside the home's bounds
 scene.add(home);
 const ceilings = [], colliders = [], walls = [];
+home.updateMatrixWorld(true); // door leaves sit inside hinge pivots: their boxes need world positions
 home.traverse((o) => {
   if (o.userData.ceiling) ceilings.push(o);
   if (o.userData.collide) { o.userData.box = new THREE.Box3().setFromObject(o); colliders.push({ box: o.userData.box, obj: o }); }

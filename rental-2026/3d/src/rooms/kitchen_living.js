@@ -22,8 +22,16 @@ export function kitchen() {
   // Desk along the window about 10 cm above the counter, running from the west wall into the kitchen counter's oak corner (from the scan),
   // a hand's width off the glass, clear of the blinds; an oak end panel with a small shelf at the west end; two white counter stools
   box(g, [W, 0.97, N + 0.11], [E - 0.62, 1.01, -3.11], mat.oakDoor); // ~10 cm above the counter, level with its back lip
-  box(g, [W, 0, N + 0.11], [W + 0.04, 0.97, -3.11], mat.oak, { collide: true });
-  box(g, [W + 0.04, 0.3, N + 0.11], [W + 0.34, 0.32, -3.11], mat.oak);
+  // the west end stands on an open oak cubby against the wall (from the scan): about 28 cm wide and 34 cm deep, set back
+  // from the window, open towards the room, with a plinth and one shelf; a deep front edge runs along the desk
+  const CB = -3.45; // back of the cubby
+  box(g, [W, 0, CB], [W + 0.03, 0.97, -3.11], mat.oakDoor, { collide: true });
+  box(g, [W + 0.25, 0, CB], [W + 0.28, 0.97, -3.11], mat.oakDoor, { collide: true });
+  box(g, [W + 0.03, 0, CB], [W + 0.25, 0.97, CB + 0.02], mat.oakDoor);
+  box(g, [W + 0.03, 0, -3.15], [W + 0.25, 0.08, -3.11], mat.oakDoor);   // plinth
+  box(g, [W + 0.03, 0.08, CB + 0.02], [W + 0.25, 0.1, -3.12], mat.oak);  // bottom
+  box(g, [W + 0.03, 0.45, CB + 0.02], [W + 0.25, 0.47, -3.12], mat.oak); // shelf
+  box(g, [W, 0.88, -3.14], [E - 0.62, 0.97, -3.11], mat.oakDoor);       // deep front edge under the top
   for (const cx of [1.6, 2.5]) chair(g, cx, -2.75, 0.72);
 
   glassPartition(g, SPLIT, W, E);
