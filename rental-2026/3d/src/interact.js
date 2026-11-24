@@ -46,7 +46,7 @@ export function hingedDoor(parent, { x, z, along, dir, width, height = 2.08, thi
   pivot.add(leaf);
   if (handle) {
     const h = new THREE.Mesh(new THREE.BoxGeometry(along === 'x' ? 0.02 : thick + 0.05, 0.16, along === 'z' ? 0.02 : thick + 0.05), new THREE.MeshStandardMaterial({ color: 0xb8bcc0, metalness: 0.8, roughness: 0.3 }));
-    h.position.set(along === 'x' ? dir * (width - 0.07) : 0, 1.0, along === 'z' ? dir * (width - 0.07) : 0);
+    h.position.set(along === 'x' ? dir * (width - 0.07) : 0, height > 1.2 ? 1.0 : height * 0.3, along === 'z' ? dir * (width - 0.07) : 0); // short doors (the freezer) keep it on the door
     pivot.add(h);
   }
   dress?.(pivot); // extra parts that swing with the door (a mirror, say)
