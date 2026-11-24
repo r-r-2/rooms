@@ -58,6 +58,14 @@ export function kitchen() {
   for (const y of [1.3, 1.67, 1.88, 2.1]) box(g, [sh0, y, sz0], [E, y + 0.02, sz1], mat.white);
   box(g, [sh0 + 0.04, 1.32, -3.5], [E - 0.02, 1.62, -2.99], mat.steel);              // microwave
   box(g, [sh0 + 0.035, 1.36, -3.42], [sh0 + 0.04, 1.58, -3.12], mat.dark);           //   its window
+  // Electric kettle on the desk corner by the microwave (light blue, from the scan)
+  const kettleBlue = new THREE.MeshStandardMaterial({ color: 0xa8d4e4, roughness: 0.35 });
+  const kx = 3.35, kz = -3.3, ky = 1.01;
+  const kBase = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.09, 0.02, 24), mat.dark); kBase.position.set(kx, ky + 0.01, kz); g.add(kBase);
+  const kBody = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.2, 24), kettleBlue); kBody.position.set(kx, ky + 0.12, kz); kBody.castShadow = true; g.add(kBody);
+  const kLid = new THREE.Mesh(new THREE.SphereGeometry(0.066, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), kettleBlue); kLid.scale.y = 0.35; kLid.position.set(kx, ky + 0.22, kz); g.add(kLid);
+  const kHandle = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.014, 8, 20, Math.PI), kettleBlue); kHandle.rotation.set(0, 0, -Math.PI / 2); kHandle.position.set(kx + 0.075, ky + 0.13, kz); g.add(kHandle);
+  const kSpout = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.06, 12), kettleBlue); kSpout.rotation.z = Math.PI / 2 + 0.6; kSpout.position.set(kx - 0.085, ky + 0.19, kz); g.add(kSpout);
   // Black glass hood unit over the hob
   box(g, [E - 0.38, 1.5, -2.91], [E, 2.56, -2.33], blackGlass);
   box(g, [E - 0.4, 1.48, -2.91], [E, 1.51, -2.33], mat.steel);
@@ -179,9 +187,6 @@ export function living() {
   box(g, [tx, 0.97, tz0], [tx + d, 1.0, tz1], mat.oak);                        // console top
   box(g, [tx, 0.75, tz0], [tx + 0.02, 0.97, tz1], mat.counter);                // dark inside
   box(g, [tx + 0.05, 0.75, 0.8], [tx + 0.25, 0.82, 1.15], mat.dark);           // set-top box
-  const pouf = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), new THREE.MeshStandardMaterial({ color: 0xa58bd0, roughness: 0.9 }));
-  pouf.position.set(2.6, 0.18, 1.85); pouf.scale.y = 0.9; pouf.castShadow = true;
-  g.add(pouf);
   return g;
 }
 
