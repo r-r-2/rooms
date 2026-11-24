@@ -80,10 +80,11 @@ export function kitchen() {
   box(g, [E - 0.355, 2.11, -2.33], [E, 2.13, -0.66], mat.dark);                      // shadow gap between the rows
   // Two open niches set into the wall above the tap (from the scan, about 25 cm deep)
   for (const [z0, z1, y0, y1] of [[-2.42, -1.52, 1.19, 1.5], [-2.32, -1.52, 1.52, 1.7]]) {
-    box(g, [E + 0.24, y0, z0], [E + 0.26, y1, z1], splash, { shadow: false });            // back
-    box(g, [E, y0 - 0.02, z0], [E + 0.26, y0, z1], splash);                               // shelf (bottom)
-    box(g, [E, y1, z0], [E + 0.26, y1 + 0.02, z1], splash);                               // top
-    for (const z of [z0 - 0.02, z1]) box(g, [E, y0, z], [E + 0.26, y1, z + 0.02], splash); // sides
+    const nich = [box(g, [E + 0.24, y0, z0], [E + 0.26, y1, z1], splash, { shadow: false }),  // back
+      box(g, [E, y0 - 0.02, z0], [E + 0.26, y0, z1], splash),                                   // shelf (bottom)
+      box(g, [E, y1, z0], [E + 0.26, y1 + 0.02, z1], splash)];                                  // top
+    for (const z of [z0 - 0.02, z1]) nich.push(box(g, [E, y0, z], [E + 0.26, y1, z + 0.02], splash)); // sides
+    nich.forEach((m) => (m.userData.wall = 'z')); // hide with the east wall in the view from above
   }
   // Fridge: freezer on top, door gap, two handles, kick plate (front faces west)
   const fridge = new THREE.MeshStandardMaterial({ color: 0xdfe2e4, roughness: 0.25, metalness: 0.55 });
