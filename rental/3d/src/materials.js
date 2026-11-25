@@ -72,7 +72,8 @@ export const mat = {
   showerGlass: new THREE.MeshStandardMaterial({ color: 0xcfe6ee, roughness: 0.05, transparent: true, opacity: 0.25, depthWrite: false }),
   mirror: new THREE.MeshStandardMaterial({ color: 0xdde6ea, roughness: 0.02, metalness: 1 }),
   leaf: new THREE.MeshStandardMaterial({ color: 0x4f7a45, roughness: 0.8 }),
-  blinds: new THREE.MeshStandardMaterial({ color: 0xf0ece4, roughness: 0.7, side: THREE.DoubleSide }),
+  blinds: new THREE.MeshStandardMaterial({ color: 0xdccdab, roughness: 0.7, side: THREE.DoubleSide }), // warm cream, from the scan
+  blindTape: new THREE.MeshStandardMaterial({ color: 0x6e4a2e, roughness: 0.9 }),                       // brown cloth ladder tapes
   canvasTexture,
 };
 

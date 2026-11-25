@@ -216,6 +216,13 @@ function blinds(a, b, y0, y1, at, alongZ = false) {
   }
   const rail = new THREE.Mesh(new THREE.BoxGeometry(alongZ ? 0.06 : b - a + 0.02, 0.04, alongZ ? b - a + 0.02 : 0.06), mat.blinds); // head rail
   rail.position.set(alongZ ? at : (a + b) / 2, y1 + 0.005, alongZ ? (a + b) / 2 : at); g.add(rail);
+  // brown ladder tapes holding the slats, in front and behind, every half metre or so
+  const n = Math.max(2, Math.round((b - a) / 0.5)), step = (b - a - 0.3) / (n - 1);
+  for (let i = 0; i < n; i++) for (const side of [-1, 1]) {
+    const tape = new THREE.Mesh(new THREE.BoxGeometry(alongZ ? 0.002 : 0.016, y1 - y0, alongZ ? 0.016 : 0.002), mat.blindTape);
+    const u = a + 0.15 + i * step, off = side * 0.037;
+    tape.position.set(alongZ ? at + off : u, (y0 + y1) / 2, alongZ ? u : at + off); g.add(tape);
+  }
   return g;
 }
 
