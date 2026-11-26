@@ -8,7 +8,7 @@ import { kitchen, living } from './rooms/kitchen_living.js';
 import { corridor, toilet } from './rooms/baths.js';
 import { downlights, roomLights } from './lights.js';
 import { toggleSound, updateSound } from './sound.js';
-import { setupPointer, updateTweens, tween, items, events } from './interact.js';
+import { setupPointer, updateTweens, tween, items, events, moving } from './interact.js';
 import { makeDaylight } from './daylight.js';
 import { Tour, ROOMS } from './tour.js';
 import { Intro, INTRO_END } from './intro.js';
@@ -24,6 +24,8 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.autoUpdate = false; // redrawn only when something changes: see shadowDirty
+let shadowDirty = true;
 renderer.localClippingEnabled = true; // the intro's scan sweep
 const scene = new THREE.Scene();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
@@ -79,7 +81,7 @@ for (const w of walls) {
   w.userData.out = !outer ? null : alongX ? new THREE.Vector3(0, 0, Math.sign(p - centre.z)) : new THREE.Vector3(Math.sign(p - centre.x), 0, 0);
 }
 const toCam = new THREE.Vector3();
-const cutaway = (on) => { for (const w of walls) w.visible = !on || !w.userData.out || toCam.subVectors(camera.position, w.position).dot(w.userData.out) < 0; };
+const cutaway = (on) => { for (const w of walls) { const v = !on || !w.userData.out || toCam.subVectors(camera.position, w.position).dot(w.userData.out) < 0; if (w.visible !== v) { w.visible = v; shadowDirty = true; } } }; // hidden walls stop casting shadows
 const fixtures = downlights(scene);
 
 // Cameras and controls
@@ -119,7 +121,7 @@ $('btn-lights').onclick = nextLook;
 $('btn-time').onclick = () => applyTime((timeIdx + 1) % TIMES.length);
 function applyTime(i) {
   timeIdx = i; showTimeButton(i);
-  const [h, label] = TIMES[i], { night } = setHour(h);
+  const [h, label] = TIMES[i], { night } = setHour(h); shadowDirty = true; // the sun moved
   city.setTime(h, night); scene.fog = new THREE.Fog(city.fogColor || scene.background.clone(), 900, 5000);
   lightsOn = night; const towerOn = lightsOn && mode !== 'intro'; // (mode is only read once the lights are on, after start-up)
   $('btn-lights').hidden = !towerOn; if (towerOn) setTimeout(towerHint, 600);
@@ -167,7 +169,7 @@ const endFlight = () => {
   if (!flight) return;
   const { to, vy0 } = flight; flight = null; if (vy0) camera.clearViewOffset();
   camera.position.copy(to.pos); camera.quaternion.copy(to.quat); camera.fov = to.fov; camera.updateProjectionMatrix();
-  ceilings.forEach((o) => (o.visible = mode !== 'orbit')); backdrops.forEach((o) => (o.visible = mode !== 'orbit'));
+  ceilings.forEach((o) => (o.visible = mode !== 'orbit')); backdrops.forEach((o) => (o.visible = mode !== 'orbit')); shadowDirty = true; // ceilings shade the rooms
   if (mode === 'orbit') orbit.update();
 };
 const SWEEP = 0.7; // radians the camera circles while it flies in or out
@@ -190,7 +192,7 @@ function stepFlight(dt) {
   if (f.vy0) camera.setViewOffset(innerWidth, innerHeight, 0, f.vy0 * (1 - e), innerWidth, innerHeight);
   // inside the rooms: ceilings and the city once we're below the ceiling; the cutaway while we're above it
   const inside = camera.position.y < 2.58; // swap exactly at the ceiling, so you never see through it
-  ceilings.forEach((o) => (o.visible = inside)); backdrops.forEach((o) => (o.visible = inside));
+  ceilings.forEach((o) => (o.visible = inside)); backdrops.forEach((o) => (o.visible = inside)); shadowDirty = true; // ceilings shade the rooms
   if (f.t >= 1) { camera.quaternion.copy(to.quat); endFlight(); }
 }
 let skipTap = 0; // a tap that skips a camera move doesn't also pause the walkthrough
@@ -216,7 +218,7 @@ function setModeNow(m, pose, prev) {
   document.body.classList.toggle('walking', m === 'walk'); wake();
   if (m !== 'walk') { aimed = null; show('btn-use', false); }
   show('tourbar', m === 'tour'); setPaused(false);
-  ceilings.forEach((o) => (o.visible = m !== 'orbit'));
+  ceilings.forEach((o) => (o.visible = m !== 'orbit')); shadowDirty = true; // ceilings shade the rooms
   backdrops.forEach((o) => (o.visible = m !== 'orbit'));
   orbit.enabled = m === 'orbit';
   if (m !== 'walk') walk.disable();
@@ -303,7 +305,7 @@ if (intro && !location.hash.includes('nowelcome')) introShift = measureWelcome()
 fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
 renderer.compile(scene, camera);
 fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
-const endIntro = () => { intro?.finish(); intro = null; renderer.shadowMap.autoUpdate = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; noFly = true; go(); noFly = false; } else if (!location.hash.includes('nowelcome')) showWelcome(); };
+const endIntro = () => { intro?.finish(); intro = null; shadowDirty = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; noFly = true; go(); noFly = false; } else if (!location.hash.includes('nowelcome')) showWelcome(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 
 // Replay the intro from the welcome card: back to an empty site, then build it again
@@ -351,7 +353,7 @@ renderer.setAnimationLoop(() => {
   if (intro) {
     // smooth out uneven frame times so the sweep and camera glide, and redraw shadows every other frame
     introDt = introDt * 0.8 + dt * 0.2;
-    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = (frame++ % 2) === 0;
+    if ((frame++ % 2) === 0) shadowDirty = true;
     if (!intro.update(introDt)) endIntro();
     else if (introShift) { const k = THREE.MathUtils.smootherstep(intro.t, INTRO_END - 1.4, INTRO_END - 0.35); camera.setViewOffset(w, h, 0, introShift * k, w, h); }
   }
@@ -369,7 +371,8 @@ renderer.setAnimationLoop(() => {
   updateSound(camera.position, mode === 'walk' || mode === 'tour');
   cutaway(mode === 'orbit' || mode === 'intro' || (flight && camera.position.y >= 2.58));
   calm();
+  if (shadowDirty || moving()) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; } // only when something changed
   renderer.render(scene, camera);
   const ld = document.getElementById('loader'); if (ld && !ld.classList.contains('done')) { ld.classList.add('done'); setTimeout(() => ld.remove(), 550); } // first frame is up
 });
-window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; } };
+window.__app = { setMode, camera, items, tour, applyTime, renderer, get intro() { return intro; } };

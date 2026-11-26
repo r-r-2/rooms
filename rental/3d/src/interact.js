@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 export const items = [];          // { meshes: Mesh[], tap: () => void, room }
 const tweens = [];
+export const moving = () => tweens.length > 0; // anything animating (doors, curtains...): shadows need redrawing
 export const events = new EventTarget(); // 'sound' events: { detail: { kind, at } }
 
 // Register meshes (or groups) as one tappable thing. Materials are cloned so the hover glow stays per object.

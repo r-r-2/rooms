@@ -79,13 +79,16 @@ function burst(freq, type, dur, level, q = 1) {
   const t = ctx.currentTime, s = ctx.createBufferSource(); s.buffer = noise;
   const g = gain(0);
   g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  chain(s, filter(type, freq, q), g, master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  const f = filter(type, freq, q);
+  chain(s, f, g, master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  s.onended = () => { s.disconnect(); f.disconnect(); g.disconnect(); }; // Safari keeps connected nodes alive otherwise
 }
 function beep(freq, at, dur = 0.08, level = 0.05) {
   const t = ctx.currentTime + at, o = ctx.createOscillator(), g = gain(0);
   o.type = 'sine'; o.frequency.value = freq;
   g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   chain(o, g, master); o.start(t); o.stop(t + dur + 0.02);
+  o.onended = () => { o.disconnect(); g.disconnect(); };
 }
 const EFFECTS = {
   door: () => { burst(700, 'bandpass', 0.35, 0.08, 2); setTimeout(() => burst(140, 'lowpass', 0.12, 0.25), 550); },
@@ -119,9 +122,9 @@ export function updateSound(pos, walking) {
   if (!on || !ctx) return;
   let here = 'corridor';
   for (const [name, [x0, x1, z0, z1]] of Object.entries(ROOMS)) if (pos.x > x0 && pos.x < x1 && pos.z > z0 && pos.z < z1) here = name;
-  for (const [name, bus] of Object.entries(tones)) {
+  for (const [name, bus] of Object.entries(tones)) { // only when it changes: a new fade every frame piles up in Safari
     const target = walking ? (name === here ? 1 : 0.12) : 0.35;
-    bus.gain.setTargetAtTime(target, ctx.currentTime, 0.6);
+    if (bus.target !== target) { bus.target = target; bus.gain.cancelScheduledValues(ctx.currentTime); bus.gain.setTargetAtTime(target, ctx.currentTime, 0.6); }
   }
   footsteps(pos, walking, here === 'kitchen' || here === 'bath');
 }
