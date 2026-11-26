@@ -370,5 +370,6 @@ renderer.setAnimationLoop(() => {
   cutaway(mode === 'orbit' || mode === 'intro' || (flight && camera.position.y >= 2.58));
   calm();
   renderer.render(scene, camera);
+  const ld = document.getElementById('loader'); if (ld && !ld.classList.contains('done')) { ld.classList.add('done'); setTimeout(() => ld.remove(), 550); } // first frame is up
 });
 window.__app = { setMode, camera, items, tour, applyTime, get intro() { return intro; } };

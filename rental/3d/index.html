@@ -28,12 +28,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="src/style.css">
+<style>
+/* Loading text: shows the instant the page opens, until the 3D draws its first frame. The lines rotate with a CSS
+   opacity animation, which keeps running even while the 3D code is busy building the scene. */
+#loader { position: fixed; inset: 0; z-index: 50; background: #dce3e8; display: grid; place-content: center; justify-items: center; gap: 6px; transition: opacity 0.5s ease; }
+#loader.done { opacity: 0; pointer-events: none; }
+#loader .ln { font: 500 20px/1.2 'Literata', Georgia, serif; margin: 0; color: #2e2620; }
+#loader .quips { display: grid; margin: 0; font: 15px/1.5 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #4a423c; }
+#loader .quips span { grid-area: 1 / 1; text-align: center; opacity: 0; animation: quip 11.2s linear infinite; will-change: opacity; }
+@keyframes quip { 0% { opacity: 0; } 2.2% { opacity: 1; } 12% { opacity: 1; } 14.3% { opacity: 0; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #loader .quips span { animation: none; } #loader .quips span:first-child { opacity: 1; } }
+</style>
 <script src="../../analytics.js"></script>
 <script type="importmap">
 { "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }
 </script>
 </head>
 <body>
+<div id="loader" role="status" aria-live="polite"><p class="ln">Short-term rental</p><p class="quips"><span style="animation-delay:0.0s">Unlocking the front door…</span><span style="animation-delay:1.6s">Switching on the lights…</span><span style="animation-delay:3.2s">Opening the blinds…</span><span style="animation-delay:4.8s">Fluffing the pillows…</span><span style="animation-delay:6.4s">Starting the kettle…</span><span style="animation-delay:8.0s">Turning on the AC…</span><span style="animation-delay:9.6s">Making the bed…</span></p></div>
 <main>
   <canvas id="c" aria-label="3D model of the apartment"></canvas>
 
