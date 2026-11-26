@@ -307,7 +307,20 @@ if (intro && !location.hash.includes('nowelcome')) introShift = measureWelcome()
 fixtures.visible = true; backdrops.forEach((o) => (o.visible = true));
 renderer.compile(scene, camera);
 fixtures.visible = false; backdrops.forEach((o) => (o.visible = false));
-const endIntro = () => { intro?.finish(); intro = null; shadowDirty = true; fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; noFly = true; go(); noFly = false; } else if (!location.hash.includes('nowelcome')) showWelcome(); };
+// Morning is the only time with shadows. Its shader variants are prepared quietly in the background once the
+// intro is done, so the first switch to Morning doesn't hitch while the browser compiles them.
+let shadowsReady = false;
+const prepareShadows = () => {
+  if (shadowsReady) return; shadowsReady = true;
+  const was = sun.castShadow; sun.castShadow = true;
+  renderer.compileAsync(scene, camera).then(() => { // then one off-screen draw warms up the shadow map's own shader
+    if (sun.castShadow) return; const rt = new THREE.WebGLRenderTarget(8, 8);
+    sun.castShadow = true; renderer.shadowMap.needsUpdate = true; renderer.setRenderTarget(rt); renderer.render(scene, camera);
+    renderer.setRenderTarget(null); rt.dispose(); sun.castShadow = false; shadowDirty = true;
+  }).catch(() => {});
+  sun.castShadow = was;
+};
+const endIntro = () => { intro?.finish(); intro = null; shadowDirty = true; setTimeout(prepareShadows, 1500); fixtures.visible = true; show('btn-skip', false); camera.position.copy(dollhousePose); setMode('orbit'); if (deep) { const go = deep; deep = null; noFly = true; go(); noFly = false; } else if (!location.hash.includes('nowelcome')) showWelcome(); };
 if (intro) { show('btn-skip', true); $('btn-skip').onclick = endIntro; } else { mode = 'none'; endIntro(); }
 
 // Replay the intro from the welcome card: back to an empty site, then build it again
