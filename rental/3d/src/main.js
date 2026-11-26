@@ -6,7 +6,7 @@ import { Walk } from './walk.js';
 import { bedroom } from './rooms/bedroom.js';
 import { kitchen, living } from './rooms/kitchen_living.js';
 import { corridor, toilet } from './rooms/baths.js';
-import { downlights, roomLights } from './lights.js';
+import { downlights, roomLights, lightLevel } from './lights.js';
 import { toggleSound, updateSound } from './sound.js';
 import { setupPointer, updateTweens, tween, items, events, moving } from './interact.js';
 import { makeDaylight } from './daylight.js';
@@ -105,7 +105,7 @@ fitDollhouse();
 
 // Time of day for the dollhouse and walk views (the sun button cycles through these)
 const TIMES = [[7, 'Morning'], [12.5, 'Midday'], [17.75, 'Evening'], [22, 'Night']];
-let timeIdx = 0;
+let timeIdx = 1;
 // One tap to the next time of day: sunrise, sun, sunset, moon
 const TIME_ICONS = [
   '<path d="M3 17h18M7 17a5 5 0 0 1 10 0M12 7V4M5.6 10.6 3.8 8.8M18.4 10.6l1.8-1.8"/>',
@@ -122,6 +122,8 @@ $('btn-time').onclick = () => applyTime((timeIdx + 1) % TIMES.length);
 function applyTime(i) {
   timeIdx = i; showTimeButton(i);
   const [h, label] = TIMES[i], { night } = setHour(h); shadowDirty = true; // the sun moved
+  sun.castShadow = i === 0; // shadows only at sunrise, when the low sun makes them worth drawing
+  lightLevel.k = night ? 1.5 : 1; lightLevel.warm = night; // rooms brighter and cosier at night
   city.setTime(h, night); scene.fog = new THREE.Fog(city.fogColor || scene.background.clone(), 900, 5000);
   lightsOn = night; const towerOn = lightsOn && mode !== 'intro'; // (mode is only read once the lights are on, after start-up)
   $('btn-lights').hidden = !towerOn; if (towerOn) setTimeout(towerHint, 600);
@@ -130,7 +132,7 @@ function applyTime(i) {
 }
 $('times').innerHTML = TIMES.map(([, label]) => `<button aria-pressed="false">${label}</button>`).join('');
 $('times').querySelectorAll('button').forEach((b, k) => (b.onclick = () => applyTime(k)));
-applyTime(0);
+applyTime(1); // open at midday
 
 // Modes
 let mode = 'intro';

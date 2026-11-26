@@ -15,6 +15,7 @@ const ROOMS = {
 };
 
 export const roomLights = {};
+export const lightLevel = { k: 1, warm: false }; // brighter and warmer at night (set by the time of day)
 
 export function downlights(scene) {
   const g = new THREE.Group(); g.name = 'downlights';
@@ -33,7 +34,8 @@ export function downlights(scene) {
     });
     const state = { on: false, light, discs, set(on) {
       this.on = on;
-      light.intensity = on ? 0.9 * spots.length : 0;
+      light.intensity = on ? 0.9 * spots.length * lightLevel.k : 0;
+      light.color.setHex(lightLevel.warm ? 0xffbf7a : 0xffd9a8); // evening lamps are warmer
       discs.forEach((d) => d.material.emissive.setHex(on ? 0xffe2b8 : 0x000000));
       discs.forEach((d) => (d.userData.baseEmissive = on ? 0xffe2b8 : 0x000000));
     } };
